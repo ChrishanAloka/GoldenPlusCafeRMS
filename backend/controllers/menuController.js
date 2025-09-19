@@ -32,56 +32,73 @@ exports.createMenu = async (req, res) => {
   const formData = req.body;
   const file = req.file;
 
-  if (!file) {
-    return res.status(400).json({ error: "Image is required" });
+  if (file) {
+    // return res.status(400).json({ error: "Image is required" });
+  
+
+    console.log("✅ Upload started for file:", file.originalname);
+    console.log("📁 File size:", (file.size / 1024).toFixed(2), "KB");
+
+    try {
+      const bucket = storage.bucket(BUCKET_NAME);
+      const blob = bucket.file(file.originalname);
+
+      const blobStream = blob.createWriteStream();
+
+      // Log when upload starts
+      blobStream.on("error", (err) => {
+        console.error("❌ Upload failed:", err);
+        res.status(500).json({ error: "Image upload failed" });
+      });
+
+      // Log upload progress (chunk-based)
+      let uploadedBytes = 0;
+      blobStream.on("data", (chunk) => {
+        uploadedBytes += chunk.length;
+        const progress = ((uploadedBytes / file.size) * 100).toFixed(1);
+        console.log(`📤 Uploading... ${progress}% (${uploadedBytes} / ${file.size} bytes)`);
+      });
+
+      blobStream.on("finish", async () => {
+        // Make the file public
+        // await blob.makePublic();
+
+        console.log("✅ Upload completed:", file.originalname);
+
+        const imageUrl = `https://storage.googleapis.com/${BUCKET_NAME}/${file.originalname}`;
+
+        const newMenu = new Menu({
+          ...formData,
+          imageUrl
+        });
+
+        await newMenu.save();
+        console.log("💾 Menu item saved to database:", newMenu.name);
+        console.log("Success");
+        res.json(newMenu);
+      });
+
+      blobStream.end(file.buffer);
+    } catch (err) {
+      console.error("Upload failed:", err.message);
+      res.status(500).json({ error: "Internal server error" });
+    }
   }
-
-  console.log("✅ Upload started for file:", file.originalname);
-  console.log("📁 File size:", (file.size / 1024).toFixed(2), "KB");
-
-  try {
-    const bucket = storage.bucket(BUCKET_NAME);
-    const blob = bucket.file(file.originalname);
-
-    const blobStream = blob.createWriteStream();
-
-     // Log when upload starts
-    blobStream.on("error", (err) => {
-      console.error("❌ Upload failed:", err);
-      res.status(500).json({ error: "Image upload failed" });
-    });
-
-    // Log upload progress (chunk-based)
-    let uploadedBytes = 0;
-    blobStream.on("data", (chunk) => {
-      uploadedBytes += chunk.length;
-      const progress = ((uploadedBytes / file.size) * 100).toFixed(1);
-      console.log(`📤 Uploading... ${progress}% (${uploadedBytes} / ${file.size} bytes)`);
-    });
-
-    blobStream.on("finish", async () => {
-      // Make the file public
-      // await blob.makePublic();
-
-      console.log("✅ Upload completed:", file.originalname);
-
-      const imageUrl = `https://storage.googleapis.com/${BUCKET_NAME}/${file.originalname}`;
-
+  else if(!file){
+    try {
       const newMenu = new Menu({
-        ...formData,
-        imageUrl
+        ...formData
       });
 
       await newMenu.save();
       console.log("💾 Menu item saved to database:", newMenu.name);
       console.log("Success");
       res.json(newMenu);
-    });
-
-    blobStream.end(file.buffer);
-  } catch (err) {
-    console.error("Upload failed:", err.message);
-    res.status(500).json({ error: "Internal server error" });
+    }
+    catch (err) {
+      console.error("Creation failed:", err.message);
+      res.status(500).json({ error: "Internal server error" });
+    }
   }
 };
 

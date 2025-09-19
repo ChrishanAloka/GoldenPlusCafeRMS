@@ -374,7 +374,6 @@ const MenuManagement = () => {
               accept="image/*"
               onChange={handleImageChange}
               className="form-control"
-              required
             />
           </div>
 
