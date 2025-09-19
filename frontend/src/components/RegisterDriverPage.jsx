@@ -33,7 +33,7 @@ const RegisterDriverPage = () => {
   const fetchDrivers = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get("https://rms-6one.onrender.com/api/auth/drivers", {
+      const res = await axios.get("https://goldenpluscaferms.onrender.com/api/auth/drivers", {
         headers: { Authorization: `Bearer ${token}` }
       });
       setDrivers(res.data);
@@ -54,7 +54,7 @@ const RegisterDriverPage = () => {
     
     
       const token = localStorage.getItem("token");
-      const res = await axios.post("https://rms-6one.onrender.com/api/auth/drivers", formData, {
+      const res = await axios.post("https://goldenpluscaferms.onrender.com/api/auth/drivers", formData, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`
@@ -94,7 +94,7 @@ const RegisterDriverPage = () => {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.put(
-        `https://rms-6one.onrender.com/api/auth/drivers/${editingDriver}`,
+        `https://goldenpluscaferms.onrender.com/api/auth/drivers/${editingDriver}`,
         editData,
         {
           headers: {
@@ -120,7 +120,7 @@ const RegisterDriverPage = () => {
 
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`https://rms-6one.onrender.com/api/auth/drivers/${id}`, {
+      await axios.delete(`https://goldenpluscaferms.onrender.com/api/auth/drivers/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 

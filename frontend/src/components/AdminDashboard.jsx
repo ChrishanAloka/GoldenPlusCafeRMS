@@ -67,7 +67,7 @@ const AdminDashboard = () => {
           break;
       }
 
-      const res = await axios.get("https://rms-6one.onrender.com/api/auth/admin/summary", {
+      const res = await axios.get("https://goldenpluscaferms.onrender.com/api/auth/admin/summary", {
         headers: { Authorization: `Bearer ${token}` },
         params: payload
       });

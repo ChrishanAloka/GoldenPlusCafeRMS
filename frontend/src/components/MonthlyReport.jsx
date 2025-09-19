@@ -29,7 +29,7 @@ const MonthlyReport = () => {
       const token = localStorage.getItem("token");
       try {
         const res = await axios.get(
-          `https://rms-6one.onrender.com/api/auth/report/monthly?month=${parseInt(month) + 1}&year=${parseInt(year)}`,
+          `https://goldenpluscaferms.onrender.com/api/auth/report/monthly?month=${parseInt(month) + 1}&year=${parseInt(year)}`,
           {
             headers: { Authorization: `Bearer ${token}` }
           }

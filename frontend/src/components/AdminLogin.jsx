@@ -14,7 +14,7 @@ const AdminLogin = () => {
 const handleLogin = async (e) => {
   e.preventDefault();
   try {
-    const res = await axios.post("https://rms-6one.onrender.com/api/auth/login", { email, password });
+    const res = await axios.post("https://goldenpluscaferms.onrender.com/api/auth/login", { email, password });
     const data = res.data;
 
     if (data.role !== "admin") {

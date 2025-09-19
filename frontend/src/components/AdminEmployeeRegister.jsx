@@ -25,7 +25,7 @@ const AdminEmployeeRegister = () => {
     const fetchNextId = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get("https://rms-6one.onrender.com/api/auth/employees/next-id", {
+        const res = await axios.get("https://goldenpluscaferms.onrender.com/api/auth/employees/next-id", {
           headers: { Authorization: `Bearer ${token}` }
         });
         setGeneratedId(res.data.nextId);
@@ -52,7 +52,7 @@ const AdminEmployeeRegister = () => {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.post(
-        "https://rms-6one.onrender.com/api/auth/employee/register",
+        "https://goldenpluscaferms.onrender.com/api/auth/employee/register",
         payload,
         {
           headers: {

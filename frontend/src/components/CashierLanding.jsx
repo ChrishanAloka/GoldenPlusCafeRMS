@@ -42,7 +42,7 @@ const CashierLanding = () => {
     const timer = setTimeout(async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get("https://rms-6one.onrender.com/api/auth/customer", {
+        const res = await axios.get("https://goldenpluscaferms.onrender.com/api/auth/customer", {
           params: { phone: customer.phone },
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -61,7 +61,7 @@ const CashierLanding = () => {
   const fetchMenus = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get("https://rms-6one.onrender.com/api/auth/menus", {
+      const res = await axios.get("https://goldenpluscaferms.onrender.com/api/auth/menus", {
         headers: { Authorization: `Bearer ${token}` }
       });
       setMenus(res.data);
@@ -74,7 +74,7 @@ const CashierLanding = () => {
   try {
     const token = localStorage.getItem("token");
     const res = await axios.get(
-      "https://rms-6one.onrender.com/api/auth/admin/service-charge",
+      "https://goldenpluscaferms.onrender.com/api/auth/admin/service-charge",
       {
         headers: { Authorization: `Bearer ${token}` }
       }
@@ -96,7 +96,7 @@ const CashierLanding = () => {
   const fetchDeliveryCharge = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get("https://rms-6one.onrender.com/api/auth/admin/delivery-charge", {
+      const res = await axios.get("https://goldenpluscaferms.onrender.com/api/auth/admin/delivery-charge", {
         headers: { Authorization: `Bearer ${token}` }
       });
       setDeliveryChargeSettings(res.data);
@@ -228,7 +228,7 @@ const CashierLanding = () => {
       };
 
       const res = await axios.post(
-        "https://rms-6one.onrender.com/api/auth/order",
+        "https://goldenpluscaferms.onrender.com/api/auth/order",
         payload,
         {
           headers: { Authorization: `Bearer ${token}` }
@@ -442,7 +442,7 @@ const finalTotal = subtotal + serviceCharge + deliveryCharge;
                     src={
                     menu.imageUrl.startsWith("https")
                       ? menu.imageUrl
-                      : `https://rms-6one.onrender.com${menu.imageUrl}`
+                      : `https://goldenpluscaferms.onrender.com${menu.imageUrl}`
                   }
                     alt={menu.name}
                     style={{ height: "150px", width:"100%" ,objectFit: "contain" }}
@@ -453,7 +453,7 @@ const finalTotal = subtotal + serviceCharge + deliveryCharge;
                   />
                   <div className="card-body text-center">
                     <h6>{menu.name}</h6>
-                    <p className="m-0">${menu.price.toFixed(2)} </p>
+                    <p className="m-0">{symbol}{menu.price.toFixed(2)} </p>
                     <p className="m-0">
                       Stock:{" "}
                     <span className={`badge ${lowStock ? "bg-warning text-dark" : "bg-success"}`}>
@@ -492,7 +492,7 @@ const finalTotal = subtotal + serviceCharge + deliveryCharge;
                   cart.map((item, idx) => (
                     <li key={idx} className="list-group-item d-flex justify-content-between align-items-center">
                       <span>{item.name}</span>
-                      <span>${(item.price * item.quantity).toFixed(2)}</span>
+                      <span>{symbol}{(item.price * item.quantity).toFixed(2)}</span>
                       <span className="badge bg-secondary">{item.quantity}</span>
                       <button
                         className="btn btn-sm btn-outline-danger"

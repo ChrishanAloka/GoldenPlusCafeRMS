@@ -82,6 +82,7 @@ function App() {
       <Route path="/admin-signup" element={<AdminSignup />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/unauthorized" element={<Unauthorized />} />
+      
       <Route
         element={
           <ProtectedRoute allowedRoles={["admin"]}>
@@ -106,12 +107,13 @@ function App() {
         <Route path="/admin/kitchen-requests" element={<AdminKitchenRequests />} />
         <Route path="/admin/service-charge" element={<AdminServiceCharge />} />
         <Route path="/admin/delivery-charge" element={<AdminDeliveryCharge />} />
+
       </Route>
       
       <Route
         element={
-          <ProtectedRoute allowedRoles={["kitchen"]}>
-            <RoleLayout /> 
+          <ProtectedRoute allowedRoles={["admin", "cashier"]}>
+            <RoleLayout />
           </ProtectedRoute>
         }
       >
@@ -119,36 +121,11 @@ function App() {
         <Route path="/kitchen/history" element={<KitchenOrderHistory />} />
         <Route path="/kitchen/kitchen-requestsForm" element={<KitchenRequestForm />} />
         <Route path="/kitchen/attendance/add" element={<AddAttendance />} />
-      </Route>
 
-      <Route
-        element={
-          <ProtectedRoute allowedRoles={["admin", "kitchen"]}>
-            <RoleLayout />
-          </ProtectedRoute>
-        }
-      >
         <Route path="/:role/menu" element={<MenuManagement />} />
-      </Route>
-      
-      <Route
-        element={
-          <ProtectedRoute allowedRoles={["admin", "kitchen"]}>
-            <RoleLayout />
-          </ProtectedRoute>
-        }
-      >
         <Route path="/:role/report" element={<MonthlyReport />} />
-        <Route path="/:role/bills" element={<KitchenBills />} />  {/* ✅ New route */}
-      </Route>
-      <Route path="/orders/receipt/:id" element={<ReceiptView />} />
-      <Route
-        element={
-          <ProtectedRoute allowedRoles={["cashier"]}>
-            <RoleLayout />
-          </ProtectedRoute>
-        }
-      >
+        <Route path="/:role/bills" element={<KitchenBills />} /> 
+
         <Route path="/cashier" element={<CashierLanding />} />
         <Route path="/cashier/orders" element={<CashierOrderHistory />} />
         <Route path="/cashier/today" element={<CashierDashboard />} />
@@ -156,6 +133,9 @@ function App() {
         <Route path="/cashier/driver-register" element={<RegisterDriverPage />} />
         <Route path="/cashier/attendance/add" element={<AddAttendance />} />
       </Route>
+      
+      <Route path="/cashier/takeaway-orders" element={<TakeawayOrdersPage />} />
+      <Route path="/orders/receipt/:id" element={<ReceiptView />} />
       
     </Routes>
   );

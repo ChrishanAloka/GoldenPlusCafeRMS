@@ -34,7 +34,7 @@ const MenuManagement = () => {
   const fetchMenus = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get("https://rms-6one.onrender.com/api/auth/menus", {
+      const res = await axios.get("https://goldenpluscaferms.onrender.com/api/auth/menus", {
         headers: { Authorization: `Bearer ${token}` }
       });
       setMenus(res.data);
@@ -106,7 +106,7 @@ const MenuManagement = () => {
 
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.post("https://rms-6one.onrender.com/api/auth/menu", formData, {
+      const res = await axios.post("https://goldenpluscaferms.onrender.com/api/auth/menu", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${token}`
@@ -174,7 +174,7 @@ const MenuManagement = () => {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.put(
-        `https://rms-6one.onrender.com/api/auth/menu/${editingMenu}`,
+        `https://goldenpluscaferms.onrender.com/api/auth/menu/${editingMenu}`,
         formData,
         {
           headers: {
@@ -202,7 +202,7 @@ const MenuManagement = () => {
 
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`https://rms-6one.onrender.com/api/auth/menu/${id}`, {
+      await axios.delete(`https://goldenpluscaferms.onrender.com/api/auth/menu/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -239,7 +239,7 @@ const MenuManagement = () => {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.put(
-        `https://rms-6one.onrender.com/api/auth/menu/${restockMenu._id}`,
+        `https://goldenpluscaferms.onrender.com/api/auth/menu/${restockMenu._id}`,
         { 
           minimumQty: updatedAvailableQty,
           currentQty: updatedCurrentQty 
@@ -569,7 +569,7 @@ const MenuManagement = () => {
                   src={
                     menu.imageUrl.startsWith("https")
                       ? menu.imageUrl
-                      : `https://rms-6one.onrender.com${menu.imageUrl}`
+                      : `https://goldenpluscaferms.onrender.com${menu.imageUrl}`
                   }
                   alt={menu.name}
                   className="card-img-top"

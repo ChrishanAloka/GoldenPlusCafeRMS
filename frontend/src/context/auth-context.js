@@ -61,7 +61,7 @@ export const AuthProvider = ({ children }) => {
     const fetchCurrency = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get("https://rms-6one.onrender.com/api/auth/settings/currency", {
+        const res = await axios.get("https://goldenpluscaferms.onrender.com/api/auth/settings/currency", {
           headers: { Authorization: `Bearer ${token}` }
         });
 
@@ -87,7 +87,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const token = localStorage.getItem("token");
       await axios.put(
-        "https://rms-6one.onrender.com/api/auth/settings/currency",
+        "https://goldenpluscaferms.onrender.com/api/auth/settings/currency",
         { symbol, currency: code },
         {
           headers: { Authorization: `Bearer ${token}` }

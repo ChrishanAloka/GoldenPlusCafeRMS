@@ -270,8 +270,7 @@ exports.getCashierTakeawayOrders = async (req, res) => {
 
   try {
     let query = {
-      tableNo: "Takeaway",
-      cashierId: userId
+      tableNo: "Takeaway"
     };
 
     if (status && ["Pending", "Processing", "Ready", "Completed"].includes(status)) {
