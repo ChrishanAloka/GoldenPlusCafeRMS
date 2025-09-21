@@ -149,7 +149,7 @@ const KitchenBills = () => {
 
   return (
     <div className="container py-4">
-      <h2 className="mb-4 fw-bold text-primary border-bottom pb-2">Kitchen Bills</h2>
+      <h2 className="mb-4 fw-bold text-primary border-bottom pb-2">Restaurant Bills</h2>
 
       {/* Add Bill Form */}
       <form onSubmit={handleSubmit} className="p-4 bg-white border rounded shadow-sm mb-5">

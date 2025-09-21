@@ -63,7 +63,7 @@ const RoleLayout = () => {
             {createMenuItem("/admin", "Dashboard", FaTachometerAlt)}
             {createMenuItem("/cashier/today", "View Today", FaBookOpen)}
             
-            {createMenuItem("/cashier", "Cashier Dashboard", FaCashRegister)}
+            {createMenuItem("/cashier", "Order Management", FaCashRegister)}
             {createMenuItem("/kitchen", "Live Orders", FaShoppingCart)}
             {createMenuItem("/cashier/orders", "Order History", FaHistory)}
 
@@ -74,12 +74,12 @@ const RoleLayout = () => {
             {createMenuItem("/admin/users", "User Management", FaUsers)}
             {createMenuItem("/admin/report", "Monthly Report", FaChartBar)}
             {createMenuItem("/admin/employees", "Employees", FaUserTie)}
-            {createMenuItem("/kitchen/attendance/add", "Attendance", FaUserClock)}
-            {createMenuItem("/admin/attendance", "Attendance", FaCalendarCheck)}
+            {createMenuItem("/kitchen/attendance/add", "Live Attendance", FaUserClock)}
+            {createMenuItem("/admin/attendance", "Attendance History", FaCalendarCheck)}
             {createMenuItem("/cashier/driver-register", "Drivers Takeaway", FaMotorcycle)}
             {createMenuItem("/admin/suppliers", "Suppliers", FaTruck)}
-            {createMenuItem("/admin/expenses", "Expenses", FaMoneyBillWave)}
-            {createMenuItem("/admin/bills", "Bills", FaFileInvoice)}            
+            {createMenuItem("/admin/expenses", "Supplier Expenses", FaMoneyBillWave)}
+            {createMenuItem("/admin/bills", "Restaurant Bills", FaFileInvoice)}            
             {createMenuItem("/admin/salaries", "Salary Payments", FaMoneyCheckAlt)}
             {createMenuItem("/admin/service-charge", "Service Charge", FaPercentage)}
             {createMenuItem("/admin/delivery-charge", "Delivery Charge", FaTruckLoading)}
@@ -90,7 +90,7 @@ const RoleLayout = () => {
       case "cashier":
         return (
           <>
-            {createMenuItem("/cashier", "Cashier Dashboard", FaCashRegister)}
+            {createMenuItem("/cashier", "Order Management", FaCashRegister)}
             {createMenuItem("/kitchen/menu", "Manage Menu", FaClipboardList)}
             {createMenuItem("/kitchen", "Live Orders", FaShoppingCart)}
             {createMenuItem("/cashier/orders", "Order History", FaHistory)}
@@ -99,12 +99,11 @@ const RoleLayout = () => {
 
             
             {createMenuItem("/cashier/driver-register", "Driver Register", FaMotorcycle)}
-            {createMenuItem("/cashier/attendance/add", "Attendance", FaUserClock)}
             
             
             
             {createMenuItem("/kitchen/kitchen-requestsForm", "Admin Requests", FaUtensils)}
-            {createMenuItem("/kitchen/attendance/add", "Attendance", FaUserClock)}
+            {createMenuItem("/kitchen/attendance/add", "Live Attendance", FaUserClock)}
             
           </>
         );
@@ -127,9 +126,24 @@ const RoleLayout = () => {
     <div className="layout d-flex">
       {!isMobile || sidebarOpen ? (
         <aside className={`sidebar ${sidebarOpen ? "open" : "collapsed"}`}>
-          <div className="sidebar-header">
-            {sidebarOpen && <h3 className="sidebar-title">RMS Panel</h3>}
-            
+          <div className="sidebar-header d-flex align-items-center">
+            {sidebarOpen && (
+              <>
+                <img
+                  src="/logo.jpg"
+                  alt="Logo"
+                  className="sidebar-logo rounded-circle me-2"
+                  style={{
+                    width: "40px",
+                    height: "40px",
+                    objectFit: "cover",
+                    border: "2px solid #fff",
+                    boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+                  }}
+                />
+                <h3 className="justify-content-left sidebar-title mb-0">Golden Plus Cafe RMS  </h3>
+              </>
+            )}
           </div>
           <ul className="sidebar-menu">{renderSidebarMenu()}</ul>
         </aside>

@@ -131,7 +131,7 @@ const AdminUsers = () => {
 };
 
   return (
-  <div className="container my-5">
+  <div className="container my-4">
     <h2 className="mb-4 fw-bold text-primary"> User Management</h2>
 
     {/* Export Actions */}

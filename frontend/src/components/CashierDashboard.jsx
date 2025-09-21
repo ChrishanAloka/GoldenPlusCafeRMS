@@ -35,7 +35,7 @@ const CashierDashboard = () => {
 
   return (
     <div className="container mt-4">
-      <h2 className="mb-4 text-primary border-bottom pb-2">📋 Today's Orders</h2>
+      <h2 className="mb-4 text-primary border-bottom pb-2 fw-bold">Today's Orders</h2>
 
       {orders.length === 0 ? (
         <p className="text-muted">No orders today</p>

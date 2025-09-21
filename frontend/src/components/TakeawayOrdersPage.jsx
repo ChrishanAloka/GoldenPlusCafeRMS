@@ -137,8 +137,8 @@ const TakeawayOrdersPage = () => {
 
   return (
     <div className="container my-4 mobile-scroll-container container-fluid px-3">
-      <h2>🚚 Takeaway Orders</h2>
-      <p className="text-muted">View and manage your takeaway/delivery orders</p>
+      <h2 className="mb-2 fw-bold text-primary">Takeaway Orders</h2>
+      <p className="mb-4 text-muted border-bottom pb-2">View and manage your takeaway/delivery orders</p>
 
       {/* Filters */}
       <div className="mb-4 d-flex flex-wrap gap-3 align-items-center">
@@ -164,9 +164,9 @@ const TakeawayOrdersPage = () => {
       ) : orders.length === 0 ? (
         <p className="text-muted">No takeaway orders found.</p>
       ) : (
-        <div className="table-responsive">
-          <table className="table table-hover align-middle">
-            <thead className="table-light">
+        <div className="table-responsive rounded shadow-sm border">
+          <table className="table table-hover align-middle table-bordered mb-0">
+            <thead className="table-primary">
               <tr>
                 <th>Invoice No</th>
                 <th>Customer</th>
@@ -226,21 +226,23 @@ const TakeawayOrdersPage = () => {
                     </td>
                     <td>{new Date(order.createdAt).toLocaleString()}</td>
                     <td>
-                      <button
-                        className="btn btn-sm btn-primary me-2"
-                        onClick={() => setSelectedOrder(order)}
-                      >
-                        View
-                      </button>
-
-                      {canEdit && (
+                      <div className="d-flex gap-1">
                         <button
-                          className="btn btn-sm btn-warning"
-                          onClick={() => openEditModal(order)}
+                          className="btn btn-sm btn-primary me-2"
+                          onClick={() => setSelectedOrder(order)}
                         >
-                          Edit Status
+                          View
                         </button>
-                      )}
+                        
+                        {canEdit && (
+                          <button
+                            className="btn btn-sm btn-warning"
+                            onClick={() => openEditModal(order)}
+                          >
+                            Edit
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );

@@ -52,8 +52,8 @@ const handleYearChange = (e) => {
 
   return (
     <div className="container my-4">
-      <h2>⏰ Monthly Attendance Summary</h2>
-      <p className="text-muted">View total working hours per employee</p>
+      <h2 className="mb-2 fw-bold text-primary">Monthly Attendance Summary</h2>
+      <p className="mb-4 text-muted border-bottom pb-2">View total working hours per employee</p>
 
       {/* Filters */}
       <div className="mb-4 d-flex flex-wrap gap-3 align-items-center">

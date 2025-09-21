@@ -142,7 +142,7 @@ const AttendancePage = () => {
 
   return (
     <div className="container mt-4">
-      <h2>⏰ Employee Time Punch</h2>
+      <h2 className="mb-4 fw-bold text-primary border-bottom pb-2">Employee Time Punch</h2>
 
       {/* Employee Selection */}
       <div className="mb-4">

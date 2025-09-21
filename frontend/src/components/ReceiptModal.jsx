@@ -79,7 +79,12 @@ const ReceiptModal = ({ order, onClose }) => {
           boxShadow: "0 0 10px rgba(0,0,0,0.15)"
         }}
       >
-        <h4 className="text-center mb-3">🍽️ <strong>RMS Restaurant</strong></h4>
+        {/* <h4 className="text-center mb-3">🍽️ <strong>Golden plus cafe and restaurant </strong></h4> */}
+        <h3 className="mb-0" style={{ textAlign: "center" }} ><strong>Golden plus</strong></h3>
+        <h3 className="mb-1" style={{ textAlign: "center" }}><strong>Cafe and Restaurant</strong></h3>
+        <p className="mb-0" style={{ textAlign: "center" }}> 33/C, Naranwala, Gampaha.</p>
+        <p className="mb-3" style={{ textAlign: "center" }}> 0770115235 / 0742257227</p>
+        <hr />
         <p><strong>Invoice No:</strong> {order.invoiceNo}</p>
         <p><strong>Date:</strong> {new Date().toLocaleString()}</p>
         <p><strong>Customer:</strong> {customerName}</p>

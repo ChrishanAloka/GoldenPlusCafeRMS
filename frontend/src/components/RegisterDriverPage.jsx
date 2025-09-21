@@ -149,9 +149,9 @@ const RegisterDriverPage = () => {
   const symbol = localStorage.getItem("currencySymbol") || "$";
 
   return (
-    <div className="container my-5">
-      <h2>🚚 Register Delivery Driver</h2>
-      <p className="text-muted">Add new delivery driver for Takeaway Orders</p>
+    <div className="container my-4">
+      <h2 className="mb-2 fw-bold text-primary">Register Delivery Driver</h2>
+      <p className="mb-4 text-muted border-bottom pb-2">Add new delivery driver for Takeaway Orders</p>
 
       <div className="card shadow-sm border p-4 mt-4">
         <form onSubmit={handleSubmit}>

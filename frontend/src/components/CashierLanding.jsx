@@ -275,7 +275,8 @@ const finalTotal = subtotal + serviceCharge + deliveryCharge;
   const symbol = localStorage.getItem("currencySymbol") || "$";
 
   return (
-    <div className="container-fluid px-3">
+    <div className="container-fluid px-4">
+      <h2 className="mb-4 text-primary border-bottom pb-2 fw-bold">Order Management</h2>
 
       {/* Customer Info */}
       <div className="mb-4 bg-white p-4 rounded shadow-sm">

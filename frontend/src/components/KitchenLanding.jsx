@@ -55,7 +55,7 @@ const KitchenLanding = () => {
 
   return (
     <div className="container py-4">
-      <h2 className="mb-4 text-primary border-bottom pb-2">🔥 Live Kitchen Orders</h2>
+      <h2 className="mb-4 text-primary border-bottom pb-2 fw-bold">Live Kitchen Orders</h2>
 
       {liveOrders.length === 0 ? (
         <p className="text-muted">No live orders at the moment.</p>

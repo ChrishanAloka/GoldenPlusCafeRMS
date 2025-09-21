@@ -1,12 +1,39 @@
 // src/components/Home.jsx
 import React from "react";
 import { Link } from "react-router-dom";
+import LogoImage from "../upload/logo.jpg"; 
+
+
 
 const Home = () => {
   return (
     <div className="d-flex align-items-center justify-content-center min-vh-100 bg-light text-center px-3">
       <div>
-        <h1 className="mb-4">Welcome to RMS</h1>
+        {/* 👇 Round Logo image added here */}
+        <div className="my-2 d-flex justify-content-center">
+          <div
+            style={{
+              width: "150px",
+              height: "150px",
+              borderRadius: "50%",
+              overflow: "hidden",
+              boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+            }}
+          >
+            <img
+              src={LogoImage}
+              alt="Golden Plus Logo"
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+              }}
+            />
+          </div>
+        </div>
+        <h1 className="mb-2">Welcome to Golden Plus</h1>
+        <h5 className="mb-3 border-bottom pb-2">Restaurant and Cafe Management System</h5>
+        
         <p className="lead mb-4">Please select your role to continue:</p>
 
         <div className="d-grid gap-3" style={{ maxWidth: "300px", margin: "auto" }}>

@@ -165,7 +165,6 @@ const ExpensePage = () => {
   return (
     <div className="container py-4">
       <h2 className="mb-4 text-primary fw-bold border-bottom pb-2">Record Supplier Expense</h2>
-      <ToastContainer />
 
       {/* Expense Form */}
       <form onSubmit={handleSubmit} className="p-4 bg-white shadow-sm rounded border mb-5">
@@ -331,6 +330,7 @@ const ExpensePage = () => {
           </div>
         </div>
       )}
+      <ToastContainer />
     </div>
   );
 };

@@ -123,7 +123,6 @@ const SalaryPage = () => {
   return (
   <div className="container my-4">
     <h2 className="mb-4 fw-bold text-primary">Record Employee Salary</h2>
-    <ToastContainer />
 
     {/* Salary Form */}
     <form onSubmit={handleSubmit} className="mb-4 p-4 bg-light border rounded shadow-sm">
@@ -219,6 +218,7 @@ const SalaryPage = () => {
         </tbody>
       </table>
     </div>
+    <ToastContainer />
   </div>
 );
 

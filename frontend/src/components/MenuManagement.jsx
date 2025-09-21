@@ -280,8 +280,8 @@ const MenuManagement = () => {
 
   return (
     <div className="container my-4">
-      <h2>🍔 Menu Management</h2>
-      <p className="text-muted">Add, edit, or restock menu items</p>
+      <h2 className="mb-2 fw-bold text-primary"> Menu Management</h2>
+      <p className="mb-4 text-muted border-bottom pb-2">Add, edit, or restock menu items</p>
 
       {/* Create Form */}
       <form onSubmit={handleCreate} className="mb-4 p-3 border rounded bg-light">

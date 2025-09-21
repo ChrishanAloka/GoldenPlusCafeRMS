@@ -92,77 +92,82 @@ const AdminEmployees = () => {
 const symbol = localStorage.getItem("currencySymbol") || "$";
 
   return (
-    <div className="container py-4">
-  <h2 className="mb-4 fw-bold border-bottom pb-2 text-primary">Manage Employees</h2>
+    <div className="container py-4 mobile-scroll-container">
+      <h2 className="mb-4 fw-bold border-bottom pb-2 text-primary">Manage Employees</h2>
 
-  {/* Actions */}
-  <div className="mb-4 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
-    <Link to="/admin/employee/new" className="btn btn-success btn-lg shadow-sm">
-      + Add New Employee
-    </Link>
-    <div className="d-flex gap-2">
-      <button className="btn btn-outline-success me-2" onClick={exportToExcel}>
-        📊 Export to Excel
-      </button>
-      <button className="btn btn-outline-danger" onClick={exportToPDF}>
-        🧾 Export to PDF
-      </button>
+      {/* Actions */}
+      <div className="mb-4 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+        {/* Left side: Add New Employee */}
+        <div>
+          <Link to="/admin/employee/new" className="btn btn-success btn-shadow-sm">
+            + Add New Employee
+          </Link>
+        </div>
+
+        {/* Right side: Export buttons */}
+        <div className="d-flex gap-2">
+          <button className="btn btn-outline-success" onClick={exportToExcel}>
+            📊 Export to Excel
+          </button>
+          <button className="btn btn-outline-danger" onClick={exportToPDF}>
+            🧾 Export to PDF
+          </button>
+        </div>
+      </div>
+
+      {/* Employee Table */}
+      {loading && <p className="text-info">Loading employees...</p>}
+      {!loading && employees.length === 0 && (
+        <p className="text-muted">No employees found.</p>
+      )}
+
+      <div className="table-responsive rounded shadow-sm border">
+        <table className="table table-hover align-middle table-bordered mb-0">
+          <thead className="table-primary">
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>NIC</th>
+              <th>Phone</th>
+              <th>Role</th>
+              <th>Basic Salary</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {employees.map((emp, idx) => (
+              <tr key={idx}>
+                <td>{emp.id}</td>
+                <td className="fw-semibold">{emp.name}</td>
+                <td>{emp.nic}</td>
+                <td>{emp.phone}</td>
+                <td>
+                  <span className="badge bg-secondary">{emp.role}</span>
+                </td>
+                <td>{symbol}{emp.basicSalary.toFixed(2)}</td>
+                <td>
+                  <div className="d-flex gap-2">
+                    <Link
+                      to={`/admin/employee/edit/${emp._id}`}
+                      className="btn btn-sm btn-outline-primary"
+                    >
+                      ✏️ Edit
+                    </Link>
+                    <button
+                      className="btn btn-sm btn-outline-danger"
+                      onClick={() => handleDelete(emp._id)}
+                    >
+                      🗑️ Delete
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      
     </div>
-  </div>
-
-  {/* Employee Table */}
-  {loading && <p className="text-info">Loading employees...</p>}
-  {!loading && employees.length === 0 && (
-    <p className="text-muted">No employees found.</p>
-  )}
-
-  <div id="employee-table" className="table-responsive rounded shadow-sm border">
-    <table className="table table-hover align-middle mb-0">
-      <thead className="table-primary">
-        <tr>
-          <th>ID</th>
-          <th>Name</th>
-          <th>NIC</th>
-          <th>Phone</th>
-          <th>Role</th>
-          <th>Basic Salary</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {employees.map((emp, idx) => (
-          <tr key={idx}>
-            <td>{emp.id}</td>
-            <td className="fw-semibold">{emp.name}</td>
-            <td>{emp.nic}</td>
-            <td>{emp.phone}</td>
-            <td>
-              <span className="badge bg-secondary">{emp.role}</span>
-            </td>
-            <td>{symbol}{emp.basicSalary.toFixed(2)}</td>
-            <td>
-              <div className="d-flex gap-2">
-                <Link
-                  to={`/admin/employee/edit/${emp._id}`}
-                  className="btn btn-sm btn-outline-primary"
-                >
-                  ✏️ Edit
-                </Link>
-                <button
-                  className="btn btn-sm btn-outline-danger"
-                  onClick={() => handleDelete(emp._id)}
-                >
-                  🗑️ Delete
-                </button>
-              </div>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-  
-</div>
 
   );
 };

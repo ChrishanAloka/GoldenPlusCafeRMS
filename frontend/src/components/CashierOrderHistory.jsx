@@ -118,7 +118,7 @@ const generateReceipt = (order) => {
   container.style.left = "0";
   container.style.zIndex = "10000";
   container.style.background = "#fff";
-  container.style.padding = "20px";
+  container.style.padding = "15px";
   container.style.fontFamily = "monospace";
   container.style.maxWidth = "380px";
   container.style.boxShadow = "0 0 10px rgba(0,0,0,0.25)";
@@ -128,7 +128,12 @@ const generateReceipt = (order) => {
   container.style.right = "0";
 
   container.innerHTML = `
-    <h4 style="text-align:center;">🍽️ <strong>RMS Restaurant</strong></h4>
+    <h3 class="mb-0" style="text-align:center;"><strong>Golden plus</strong></h3>
+    <h3 class="mb-1" style="text-align:center;"><strong>Cafe and Restaurant</strong></h3>
+    <p class="mb-0" style="text-align:center;"> 33/C, Naranwala, Gampaha.</p>
+    <p class="mb-3" style="text-align:center;"> 0770115235 / 0742257227</p>
+    <hr />
+
     <p><strong>Invoice No:</strong> ${order.invoiceNo || "-"}</p>
     <p><strong>Date:</strong> ${new Date(order.createdAt).toLocaleString()}</p>
     <p><strong>Customer:</strong> ${order.customerName}</p>
@@ -217,8 +222,9 @@ const generateReceipt = (order) => {
   };
 
   return (
-    <div className="mobile-scroll-container container-fluid px-3">
-      <h2 className="mb-4 text-primary border-bottom pb-2">🧾 Cashier Order History</h2>
+    // <div className="mobile-scroll-container container-fluid px-3">
+   <div className="mobile-scroll-container container my-4"> 
+      <h2 className="mb-4 fw-bold text-primary border-bottom pb-2">Order History</h2>
 
       {/* Filters & Actions */}
       <div className="row g-3 align-items-end mb-4" style={{ overflowX: "auto", width: "100%" }}>
@@ -259,13 +265,18 @@ const generateReceipt = (order) => {
         </div>
       </div>
 
-      <div className="d-flex justify-content-end gap-2 mb-3">
-        <button className="btn btn-success" onClick={exportToExcel}>
-          📤 Export Excel
-        </button>
-        <button className="btn btn-danger" onClick={exportToPDF}>
-          📄 Export PDF
-        </button>
+      <div className="mb-4 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+        
+        <div className="d-flex gap-2"></div>
+        
+        <div className="d-flex gap-2">
+          <button className="btn btn-success" onClick={exportToExcel}>
+            📤 Export Excel
+          </button>
+          <button className="btn btn-danger" onClick={exportToPDF}>
+            📄 Export PDF
+          </button>
+        </div>
       </div>
 
       {/* Order Table */}
