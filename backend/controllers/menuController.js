@@ -135,7 +135,7 @@ exports.updateMenu = async (req, res) => {
   if (currentQty !== undefined) updateFields.currentQty = currentQty;
   if (updates.category) updateFields.category = updates.category;
   if (updates.description) updateFields.description = updates.description;
-  updateFields.netProfit = price - cost;
+  if ((updates.price && updates.cost)) updateFields.netProfit = price - cost;
 
   if (file) {
     try {
