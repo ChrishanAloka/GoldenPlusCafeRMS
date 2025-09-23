@@ -7,7 +7,7 @@ import {
   FaChartBar, FaUserTie, FaCalendarCheck, FaTruck, FaMoneyBillWave,
   FaMoneyCheckAlt, FaUtensils, FaDollarSign, FaShoppingCart, FaHistory,
   FaBookOpen, FaClipboardList, FaUserCircle, FaPercentage, FaTruckLoading, 
-  FaFirstOrder,FaMotorcycle,FaUserClock,FaCashRegister
+  FaFirstOrder,FaMotorcycle,FaUserClock,FaCashRegister,FaBookReader,FaCoins,FaWallet
 } from "react-icons/fa";
 import "./Sidebar.css";
 import NotificationCenter from "./NotificationCenter";
@@ -62,8 +62,9 @@ const RoleLayout = () => {
           <>
             {createMenuItem("/admin", "Dashboard", FaTachometerAlt)}
             {createMenuItem("/cashier/today", "View Today", FaBookOpen)}
-            
+            {createMenuItem("/cashier-summery", "Cashier Summery", FaBookReader)}
             {createMenuItem("/cashier", "Order Management", FaCashRegister)}
+            
             {createMenuItem("/kitchen", "Live Orders", FaShoppingCart)}
             {createMenuItem("/cashier/orders", "Order History", FaHistory)}
 
@@ -76,8 +77,8 @@ const RoleLayout = () => {
             {createMenuItem("/admin/employees", "Employees", FaUserTie)}
             {createMenuItem("/kitchen/attendance/add", "Live Attendance", FaUserClock)}
             {createMenuItem("/admin/attendance", "Attendance History", FaCalendarCheck)}
-            {createMenuItem("/cashier/driver-register", "Drivers Takeaway", FaMotorcycle)}
-            {createMenuItem("/admin/suppliers", "Suppliers", FaTruck)}
+            {createMenuItem("/cashier/driver-register", "Takeaway Driver Register", FaMotorcycle)}
+            {createMenuItem("/admin/suppliers", "Suppliers Register", FaTruck)}
             {createMenuItem("/admin/expenses", "Supplier Expenses", FaMoneyBillWave)}
             {createMenuItem("/admin/bills", "Restaurant Bills", FaFileInvoice)}            
             {createMenuItem("/admin/salaries", "Salary Payments", FaMoneyCheckAlt)}
@@ -95,12 +96,14 @@ const RoleLayout = () => {
             {createMenuItem("/kitchen", "Live Orders", FaShoppingCart)}
             {createMenuItem("/cashier/orders", "Order History", FaHistory)}
             {createMenuItem("/cashier/takeaway-orders", "Takeaway Orders", FaFirstOrder)}
-            {createMenuItem("/cashier/today", "View Today", FaBookOpen)}
 
+            {createMenuItem("/cashier/today", "View Today", FaBookOpen)}
+            {createMenuItem("/cashier-summery", "Cashier Summery", FaBookReader)}
+
+            {createMenuItem("/cashier/other-income", "Other Incomes", FaCoins)}
+            {createMenuItem("/cashier/other-expences", "Other Expences", FaWallet)}
             
             {createMenuItem("/cashier/driver-register", "Driver Register", FaMotorcycle)}
-            
-            
             
             {createMenuItem("/kitchen/kitchen-requestsForm", "Admin Requests", FaUtensils)}
             {createMenuItem("/kitchen/attendance/add", "Live Attendance", FaUserClock)}

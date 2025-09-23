@@ -10,7 +10,7 @@ import {
   Tooltip,
   Legend
 } from "chart.js";
-import { FaMoneyBillWave, FaTruckLoading, FaFileInvoiceDollar, FaUserTie, FaChartPie, FaBalanceScale } from "react-icons/fa";
+import { FaMoneyBillWave, FaTruckLoading, FaFileInvoiceDollar, FaUserTie, FaChartPie, FaBalanceScale,  FaGift,  FaTools } from "react-icons/fa";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
@@ -22,6 +22,7 @@ const MonthlyReport = () => {
   const [year, setYear] = useState(new Date().getFullYear());
 
   const symbol = localStorage.getItem("currencySymbol") || "$";
+  
 
   // Load report data based on selected month/year
   useEffect(() => {
@@ -46,7 +47,19 @@ const MonthlyReport = () => {
     fetchReport();
   }, [month, year]);
 
-  if (loading) return <div>Loading report...</div>;
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center min-vh-100">
+        <div className="text-center">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <p className="mt-3">Loading Monthly Report...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (
     !reportData ||
     !reportData.monthlyIncome ||
@@ -54,7 +67,7 @@ const MonthlyReport = () => {
     !reportData.monthlyBills ||
     !reportData.monthlySalaries
   )
-    return <div>No data found</div>;
+  return <div>No data found</div>;
 
   // Generate dates for chart/table
   const getDatesInMonth = (year, month) => {
@@ -80,9 +93,23 @@ const MonthlyReport = () => {
   const totalBills = billData.reduce((a, b) => a + b, 0);
   const totalSalaries = salaryData.reduce((a, b) => a + b, 0);
 
-  const totalExpenses = totalSupplierExpenses + totalBills + totalSalaries;
-  const totalIncome = incomeData.reduce((a, b) => a + b, 0);
+  // ✅ Update summary calculations
+  const otherIncomeData = allDates.map(date => reportData.monthlyOtherIncome[date] || 0);
+  const otherExpenseData = allDates.map(date => reportData.monthlyOtherExpenses[date] || 0);
+
+  const totalOtherIncome = otherIncomeData.reduce((a, b) => a + b, 0);
+  const totalOtherExpenses = otherExpenseData.reduce((a, b) => a + b, 0);
+
+  const totalExpenses =
+    totalSupplierExpenses +
+    totalBills +
+    totalSalaries +
+    totalOtherExpenses;
+
+  const totalIncome = incomeData.reduce((a, b) => a + b, 0) + totalOtherIncome;
   const netProfit = totalIncome - totalExpenses;
+
+    
 
   const chartData = {
     labels: allDates.map(date => date.split("-")[2]),
@@ -93,6 +120,20 @@ const MonthlyReport = () => {
         borderColor: "rgba(75,192,192,1)",
         borderWidth: 1,
         data: incomeData
+      },
+      {
+        label: "Suppliers",
+        backgroundColor: "rgba(255,99,132,0.6)",
+        borderColor: "rgba(255,99,132,1)",
+        borderWidth: 1,
+        data: supplierExpenseData
+      },
+      {
+        label: `Other Income (${symbol})`,
+        backgroundColor: "rgba(153, 102, 255, 0.6)", // Purple
+        borderColor: "rgba(153, 102, 255, 1)",
+        borderWidth: 1,
+        data: otherIncomeData
       },
       {
         label: "Suppliers",
@@ -114,6 +155,13 @@ const MonthlyReport = () => {
         borderColor: "rgba(54,162,235,1)",
         borderWidth: 1,
         data: salaryData
+      },
+      {
+        label: "Other Expenses",
+        backgroundColor: "rgba(255, 159, 64, 0.6)", // Orange
+        borderColor: "rgba(255, 159, 64, 1)",
+        borderWidth: 1,
+        data: otherExpenseData
       }
     ]
   };
@@ -129,7 +177,6 @@ const MonthlyReport = () => {
     }
   };
 
-  
 
   return (
     <div className="container my-4">
@@ -219,6 +266,32 @@ const MonthlyReport = () => {
       </div>
     </div>
 
+    {/* Other Income */}
+    <div className="col-md-4">
+      <div className="p-4 rounded shadow-sm border-start border-purple border-5 bg-light">
+        <div className="d-flex align-items-center">
+          <FaGift size={30} className="text-purple me-3" style={{ color: "#9966ff" }} />
+          <div>
+            <small className="text-muted">Other Income</small>
+            <h5 className="mb-0" style={{ color: "#9966ff" }}>{symbol}{totalOtherIncome.toFixed(2)}</h5>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Other Expenses */}
+    <div className="col-md-4">
+      <div className="p-4 rounded shadow-sm border-start border-orange border-5 bg-light">
+        <div className="d-flex align-items-center">
+          <FaTools size={30} className="text-orange me-3" style={{ color: "#ff9f40" }} />
+          <div>
+            <small className="text-muted">Other Expenses</small>
+            <h5 className="mb-0" style={{ color: "#ff9f40" }}>{symbol}{totalOtherExpenses.toFixed(2)}</h5>
+          </div>
+        </div>
+      </div>
+    </div>
+
     {/* Supplier Expenses */}
     <div className="col-md-4">
       <div className="p-4 rounded shadow-sm border-start border-dark border-5 bg-light">
@@ -270,9 +343,11 @@ const MonthlyReport = () => {
             <tr>
               <th>Date</th>
               <th>Income ({symbol})</th>
+              <th>Other Income ({symbol})</th> {/* ✅ NEW */}
               <th>Suppliers ({symbol})</th>
               <th>Bills ({symbol})</th>
               <th>Salaries ({symbol})</th>
+              <th>Other Expenses ({symbol})</th> {/* ✅ NEW */}
               <th>Total Exp ({symbol})</th>
               <th>Net ({symbol})</th>
             </tr>
@@ -280,19 +355,34 @@ const MonthlyReport = () => {
           <tbody>
             {allDates.map((date, idx) => {
               const income = incomeData[idx].toFixed(2);
+              const otherIncome = otherIncomeData[idx].toFixed(2); // ✅ NEW
               const supplier = supplierExpenseData[idx].toFixed(2);
               const bill = billData[idx].toFixed(2);
               const salary = salaryData[idx].toFixed(2);
-              const total = (parseFloat(supplier) + parseFloat(bill) + parseFloat(salary)).toFixed(2);
-              const net = (incomeData[idx] - total).toFixed(2);
+              const otherExpense = otherExpenseData[idx].toFixed(2); // ✅ NEW
+
+              const total = (
+                parseFloat(supplier) +
+                parseFloat(bill) +
+                parseFloat(salary) +
+                parseFloat(otherExpense) // ✅ NEW
+              ).toFixed(2);
+
+              const net = (
+                parseFloat(income) +
+                parseFloat(otherIncome) - // ✅ NEW
+                parseFloat(total)
+              ).toFixed(2);
 
               return (
                 <tr key={idx}>
                   <td>{date}</td>
                   <td>{symbol}{income}</td>
+                  <td>{symbol}{otherIncome}</td> {/* ✅ NEW */}
                   <td>{symbol}{supplier}</td>
                   <td>{symbol}{bill}</td>
                   <td>{symbol}{salary}</td>
+                  <td>{symbol}{otherExpense}</td> {/* ✅ NEW */}
                   <td>{symbol}{total}</td>
                   <td className={net >= 0 ? "text-success" : "text-danger"}>
                     {symbol}{net}

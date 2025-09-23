@@ -8,12 +8,13 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 const AdminDashboard = () => {
   const [summary, setSummary] = useState({
     totalIncome: 0,
+    totalOtherIncome: 0, // ✅ NEW
     totalSupplierExpenses: 0,
     totalBills: 0,
     totalSalaries: 0,
+    totalOtherExpenses: 0, // ✅ NEW
     totalCost: 0,
     netProfit: 0,
-
     totalOrders: 0,
     statusCounts: {},
     paymentBreakdown: { cash: 0, cashdue: 0, card: 0, bank: 0 },
@@ -23,6 +24,7 @@ const AdminDashboard = () => {
   const [filterType, setFilterType] = useState("thisMonth");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
+  const [loading, setLoading] = useState(true);
 
   // Load dashboard data
   useEffect(() => {
@@ -76,6 +78,8 @@ const AdminDashboard = () => {
     } catch (err) {
       console.error("Failed to load dashboard summary:", err.message);
       alert("Failed to load admin summary");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -88,15 +92,16 @@ const AdminDashboard = () => {
 
   // ✅ Cost Breakdown Chart Data
   const costChartData = {
-    labels: ["Supplier Expenses", "Utility Bills", "Staff Salaries"],
+    labels: ["Supplier Expenses", "Utility Bills", "Staff Salaries", "Other Expenses"], // ✅ UPDATED
     datasets: [{
       label: "Expenses",
-       data: [
+      data: [
         summary.totalSupplierExpenses,
         summary.totalBills,
-        summary.totalSalaries
+        summary.totalSalaries,
+        summary.totalOtherExpenses // ✅ NEW
       ],
-      backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56"]
+      backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56", "#FF9F40"] // ✅ ADDED Orange for Other Expenses
     }]
   };
 
@@ -117,8 +122,7 @@ const AdminDashboard = () => {
     datasets: [{
       label: "Payment Methods",
        data: [
-        summary.paymentBreakdown.cash,
-        summary.paymentBreakdown.cashdue,
+        (summary.paymentBreakdown.cash - summary.paymentBreakdown.cashdue),
         summary.paymentBreakdown.card,
         summary.paymentBreakdown.bank
       ],
@@ -136,8 +140,21 @@ const AdminDashboard = () => {
     }]
   };
 
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center min-vh-100">
+        <div className="text-center">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <p className="mt-3">Loading Admin Dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-  <div className="container my-5">
+  <div className="container my-4">
     <h2 className="mb-4 text-primary fw-bold">Admin Dashboard</h2>
 
     {/* Filter Panel */}
@@ -199,7 +216,8 @@ const AdminDashboard = () => {
           value: `${summary.netProfit >= 0 ? "+" : "-"}${symbol}${formatCurrency(Math.abs(summary.netProfit))}`,
           color: summary.netProfit >= 0 ? "info" : "warning",
           icon: summary.netProfit >= 0 ? "📈" : "⚠️",
-        },
+        },{ label: "Other Income", value: `${symbol}${formatCurrency(summary.totalOtherIncome)}`, color: "success", icon: "🎁"}, // ✅ NEW
+        { label: "Other Expenses", value: `${symbol}${formatCurrency(summary.totalOtherExpenses)}`, color: "danger", icon: "🔧"} // ✅ NEW
       ].map((card, idx) => (
         <div className="col-md-3" key={idx}>
           <div className={`card bg-${card.color} text-white shadow-sm h-100`}>
@@ -302,8 +320,8 @@ const AdminDashboard = () => {
               </thead>
               <tbody>
                 {[
-                  ["Cash", summary.paymentBreakdown.cash],
-                  ["ChangeDue", summary.paymentBreakdown.cashdue],
+                  ["Cash", (summary.paymentBreakdown.cash - summary.paymentBreakdown.cashdue)],
+                  // ["ChangeDue", summary.paymentBreakdown.cashdue],
                   ["Card", summary.paymentBreakdown.card],
                   ["Bank Transfer", summary.paymentBreakdown.bank],
                 ].map(([label, val], idx) => (

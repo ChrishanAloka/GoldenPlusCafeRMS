@@ -9,16 +9,19 @@ const AdminLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
   const { login } = useContext(AuthContext);
 
 const handleLogin = async (e) => {
   e.preventDefault();
+  setLoading(true);
   try {
     const res = await axios.post("https://goldenpluscaferms.onrender.com/api/auth/login", { email, password });
     const data = res.data;
 
     if (data.role !== "admin") {
       alert("Unauthorized access");
+      setLoading(false);
       return;
     }
 
@@ -26,6 +29,7 @@ const handleLogin = async (e) => {
     navigate("/admin"); // Redirect after login
   } catch (err) {
     alert("Login failed. Please check your credentials.");
+    setLoading(false);
   }
 };
 
@@ -44,6 +48,7 @@ const handleLogin = async (e) => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              disabled={loading}
             />
           </div>
           <div className="mb-3">
@@ -56,10 +61,22 @@ const handleLogin = async (e) => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              disabled={loading}
             />
           </div>
-          <button type="submit" className="btn btn-primary w-100">
-            Login
+          <button
+            type="submit"
+            className="btn btn-primary w-100 d-flex align-items-center justify-content-center"
+            disabled={loading} // 👈 Disable button while loading
+          >
+            {loading ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                Logging in...
+              </>
+            ) : (
+              "Login"
+            )}
           </button>
         </form>
 

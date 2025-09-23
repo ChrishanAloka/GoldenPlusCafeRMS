@@ -12,7 +12,8 @@ const ExpensePage = () => {
     amount: "",
     description: "",
     date: new Date().toISOString().split("T")[0],
-    billNo: ""
+    billNo: "",
+    paymentMethod: "Cash"
   });
   const [editingId, setEditingId] = useState(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -68,7 +69,8 @@ const ExpensePage = () => {
       amount: parseFloat(formData.amount),
       description: formData.description,
       date: formData.date,
-      billNo: formData.billNo
+      billNo: formData.billNo,
+      paymentMethod: formData.paymentMethod
     };
 
     try {
@@ -129,7 +131,8 @@ const ExpensePage = () => {
       amount: exp.amount,
       description: exp.description,
       date: new Date(exp.date).toISOString().split("T")[0],
-      billNo: exp.billNo
+      billNo: exp.billNo,
+      paymentMethod: exp.paymentMethod || "Cash"
     });
     setEditingId(exp._id);
   };
@@ -169,7 +172,19 @@ const ExpensePage = () => {
       {/* Expense Form */}
       <form onSubmit={handleSubmit} className="p-4 bg-white shadow-sm rounded border mb-5">
         <div className="row g-4">
-          <div className="col-md-6">
+          
+          <div className="col-md-4">
+            <label className="form-label fw-semibold">Date</label>
+            <input
+              type="date"
+              name="date"
+              value={formData.date}
+              onChange={handleChange}
+              className="form-control shadow-sm"
+            />
+          </div>
+
+          <div className="col-md-4">
             <label className="form-label fw-semibold">Select Supplier *</label>
             <Select
               options={supplierOptions}
@@ -182,7 +197,7 @@ const ExpensePage = () => {
             />
           </div>
 
-          <div className="col-md-6">
+          <div className="col-md-4">
             <label className="form-label fw-semibold">Bill No *</label>
             <input
               type="text"
@@ -211,16 +226,22 @@ const ExpensePage = () => {
           </div>
 
           <div className="col-md-6">
-            <label className="form-label fw-semibold">Date</label>
-            <input
-              type="date"
-              name="date"
-              value={formData.date}
+            <label className="form-label fw-semibold">Payment Method</label>
+            <select
+              name="paymentMethod"
+              value={formData.paymentMethod}
               onChange={handleChange}
-              className="form-control shadow-sm"
-            />
+              className="form-select shadow-sm"
+            >
+              <option value="Cash">Cash</option>
+              <option value="Credit Card">Credit Card</option>
+              <option value="Debit Card">Debit Card</option>
+              <option value="Bank Transfer">Bank Transfer</option>
+              <option value="Cheque">Cheque</option>
+              <option value="Other">Other</option>
+            </select>
           </div>
-
+          
           <div className="col-md-12">
             <label className="form-label fw-semibold">Description</label>
             <input
@@ -252,6 +273,7 @@ const ExpensePage = () => {
               <th>Supplier</th>
               <th>Description</th>
               <th>Amount</th>
+              <th>Payment Method</th> 
               <th className="text-center">Actions</th>
             </tr>
           </thead>
@@ -270,6 +292,7 @@ const ExpensePage = () => {
                   <td>{exp.supplier?.name || "Unknown"} ({exp.supplier?.contact || "-"})</td>
                   <td>{exp.description || "-"}</td>
                   <td>{symbol}{parseFloat(exp.amount).toFixed(2)}</td>
+                  <td>{exp.paymentMethod || "Cash"}</td>
                   <td className="text-center">
                     <div className="d-flex gap-2 justify-content-center">
                       <button

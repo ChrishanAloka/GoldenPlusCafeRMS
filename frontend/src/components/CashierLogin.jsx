@@ -9,24 +9,28 @@ const CashierLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { login } = useContext(AuthContext);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
         const res = await axios.post("https://goldenpluscaferms.onrender.com/api/auth/login", { email, password });
         const data = res.data;
     
         if (data.role !== "cashier") {
           alert("Unauthorized access");
+          setLoading(false);
           return;
         }
     
         login(data); // Comes from useAuth()
         navigate("/cashier"); // Redirect after login
       } catch (err) {
-      alert("Login failed. Please check your credentials.");
+        alert("Login failed. Please check your credentials.");
+        setLoading(false);
     }
   };
 
@@ -45,6 +49,7 @@ const CashierLogin = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              disabled={loading}
             />
           </div>
           <div className="mb-3">
@@ -57,10 +62,22 @@ const CashierLogin = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              disabled={loading}
             />
           </div>
-          <button type="submit" className="btn btn-primary w-100">
-            Login
+          <button
+            type="submit"
+            className="btn btn-primary w-100 d-flex align-items-center justify-content-center"
+            disabled={loading} // 👈 Disable button while loading
+          >
+            {loading ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                Logging in...
+              </>
+            ) : (
+              "Login"
+            )}
           </button>
         </form>
 

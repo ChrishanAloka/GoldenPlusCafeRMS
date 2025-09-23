@@ -155,7 +155,7 @@ const CashierLanding = () => {
     }
 
     if (customer.orderType === "takeaway" && !customer.deliveryType) {
-      toast.warn("Delivery Type is required for Dine-In orders");
+      toast.warn("Delivery Type is required for Takeaway orders");
       return;
     }
 

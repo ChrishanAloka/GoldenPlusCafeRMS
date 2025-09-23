@@ -1,63 +1,63 @@
-// src/components/KitchenBills.jsx
+// src/components/OtherExpenses.jsx
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const KitchenBills = () => {
-  const [bills, setBills] = useState([]);
-  const [newBill, setNewBill] = useState({
-    type: "Gas",
+const OtherExpenses = () => {
+  const [expenses, setExpenses] = useState([]);
+  const [newExpense, setNewExpense] = useState({
+    category: "Marketing",
     amount: "",
     description: "",
     date: new Date().toISOString().split("T")[0],
     paymentMethod: "Cash"
   });
 
-  const [editingBill, setEditingBill] = useState(null);
-  const [editData, setEditData] = useState({ ...newBill });
+  const [editingExpense, setEditingExpense] = useState(null);
+  const [editData, setEditData] = useState({ ...newExpense });
   const [loading, setLoading] = useState(false);
 
-  // Load all bills on mount
+  // Load all expenses on mount
   useEffect(() => {
-    fetchBills();
+    fetchExpenses();
   }, []);
 
-  const fetchBills = async () => {
+  const fetchExpenses = async () => {
     const token = localStorage.getItem("token");
 
     try {
-      const res = await axios.get("https://goldenpluscaferms.onrender.com/api/auth/kitchen/bills", {
+      const res = await axios.get("https://goldenpluscaferms.onrender.com/api/auth/expense/other", {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      setBills(res.data);
+      setExpenses(res.data);
     } catch (err) {
-      console.error("Failed to load bills:", err.message);
-      toast.error("Failed to load kitchen bills");
+      console.error("Failed to load expenses:", err.message);
+      toast.error("Failed to load other expenses");
     }
   };
 
   // Handle form input change
   const handleChange = (e) =>
-    setNewBill({ ...newBill, [e.target.name]: e.target.value });
+    setNewExpense({ ...newExpense, [e.target.name]: e.target.value });
 
-  // Submit new bill
+  // Submit new expense
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const { type, amount, date } = newBill;
+    const { category, amount, date } = newExpense;
 
-    if (!type || !amount || !date) {
-      alert("Type, Amount, and Date are required");
+    if (!category || !amount || !date) {
+      alert("Category, Amount, and Date are required");
       return;
     }
 
     try {
       const token = localStorage.getItem("token");
       const res = await axios.post(
-        "https://goldenpluscaferms.onrender.com/api/auth/kitchen/bill",
-        newBill,
+        "https://goldenpluscaferms.onrender.com/api/auth/expense/other",
+        newExpense,
         {
           headers: {
             Authorization: `Bearer ${token}`
@@ -65,34 +65,34 @@ const KitchenBills = () => {
         }
       );
 
-      setBills([res.data, ...bills]);
-      setNewBill({
-        type: "Gas",
+      setExpenses([res.data, ...expenses]);
+      setNewExpense({
+        category: "Marketing",
         amount: "",
         description: "",
         date: new Date().toISOString().split("T")[0],
         paymentMethod: "Cash"
       });
 
-      toast.success("Bill added successfully!");
+      toast.success("Expense added successfully!");
     } catch (err) {
       console.error("Add failed:", err.response?.data || err.message);
-      toast.error("Failed to add bill");
+      toast.error("Failed to add expense");
     }
   };
 
-    // Get currency from localStorage (not from React context)
+  // Get currency from localStorage
   const symbol = localStorage.getItem("currencySymbol") || "$";
 
   // Open edit modal
-  const openEditModal = (bill) => {
-    setEditingBill(bill._id);
+  const openEditModal = (expense) => {
+    setEditingExpense(expense._id);
     setEditData({
-      type: bill.type,
-      amount: bill.amount,
-      description: bill.description,
-      date: new Date(bill.date).toISOString().split("T")[0],
-      paymentMethod: bill.paymentMethod || "Cash"
+      category: expense.category,
+      amount: expense.amount,
+      description: expense.description,
+      date: new Date(expense.date).toISOString().split("T")[0],
+      paymentMethod: expense.paymentMethod || "Cash"
     });
   };
 
@@ -100,13 +100,13 @@ const KitchenBills = () => {
   const handleEditChange = (e) =>
     setEditData({ ...editData, [e.target.name]: e.target.value });
 
-  // Save updated bill
+  // Save updated expense
   const handleUpdate = async (e) => {
     e.preventDefault();
 
-    const { type, amount, date } = editData;
+    const { category, amount, date } = editData;
 
-    if (!type || !amount || !date) {
+    if (!category || !amount || !date) {
       alert("All fields are required");
       return;
     }
@@ -114,62 +114,61 @@ const KitchenBills = () => {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.put(
-        `https://goldenpluscaferms.onrender.com/api/auth/kitchen/bill/${editingBill}`,
+        `https://goldenpluscaferms.onrender.com/api/auth/expense/other/${editingExpense}`,
         editData,
         {
           headers: { Authorization: `Bearer ${token}` }
         }
       );
 
-      setBills(bills.map((b) => (b._id === editingBill ? res.data : b)));
-      setEditingBill(null);
-      toast.success("Bill updated!");
+      setExpenses(expenses.map((e) => (e._id === editingExpense ? res.data : e)));
+      setEditingExpense(null);
+      toast.success("Expense updated!");
     } catch (err) {
       console.error("Update failed:", err.response?.data || err.message);
-      toast.error("Failed to update bill");
+      toast.error("Failed to update expense");
     }
   };
 
-  // Delete a bill
+  // Delete an expense
   const handleDelete = async (id) => {
-    const confirmDelete = window.confirm("Are you sure you want to delete this bill?");
+    const confirmDelete = window.confirm("Are you sure you want to delete this expense?");
     if (!confirmDelete) return;
 
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`https://goldenpluscaferms.onrender.com/api/auth/kitchen/bill/${id}`, {
+      await axios.delete(`https://goldenpluscaferms.onrender.com/api/auth/expense/other/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      setBills(bills.filter((bill) => bill._id !== id));
-      toast.success("Bill deleted");
+      setExpenses(expenses.filter((expense) => expense._id !== id));
+      toast.success("Expense deleted");
     } catch (err) {
       console.error("Delete failed:", err.response?.data || err.message);
-      toast.error("Failed to delete bill");
+      toast.error("Failed to delete expense");
     }
   };
 
-
   return (
     <div className="container py-4">
-      <h2 className="mb-4 fw-bold text-primary border-bottom pb-2">Restaurant Bills</h2>
+      <h2 className="mb-4 fw-bold text-danger border-bottom pb-2">Other Expenses</h2>
 
-      {/* Add Bill Form */}
+      {/* Add Expense Form */}
       <form onSubmit={handleSubmit} className="p-4 bg-white border rounded shadow-sm mb-5">
         <div className="row g-3">
           <div className="col-md-6">
-            <label className="form-label fw-semibold">Bill Type</label>
+            <label className="form-label fw-semibold">Expense Category</label>
             <select
-              name="type"
-              value={newBill.type}
+              name="category"
+              value={newExpense.category}
               onChange={handleChange}
               className="form-select"
             >
-              <option>Gas</option>
-              <option>Electricity</option>
-              <option>Water</option>
-              <option>Cleaning</option>
-              <option>Repairs</option>
+              <option>Marketing</option>
+              <option>Admin Supplies</option>
+              <option>Repairs & Maintenance</option>
+              <option>Software/Subscription</option>
+              <option>Training</option>
               <option>Other</option>
             </select>
           </div>
@@ -178,7 +177,7 @@ const KitchenBills = () => {
             <input
               type="number"
               name="amount"
-              value={newBill.amount}
+              value={newExpense.amount}
               onChange={handleChange}
               step="0.01"
               placeholder="e.g., 150"
@@ -190,7 +189,7 @@ const KitchenBills = () => {
             <label className="form-label fw-semibold">Payment Method</label>
             <select
               name="paymentMethod"
-              value={newBill.paymentMethod}
+              value={newExpense.paymentMethod}
               onChange={handleChange}
               className="form-select"
             >
@@ -207,7 +206,7 @@ const KitchenBills = () => {
             <input
               type="date"
               name="date"
-              value={newBill.date}
+              value={newExpense.date}
               onChange={handleChange}
               className="form-control"
               required
@@ -217,22 +216,22 @@ const KitchenBills = () => {
             <label className="form-label fw-semibold">Description</label>
             <textarea
               name="description"
-              value={newBill.description}
+              value={newExpense.description}
               onChange={handleChange}
               rows="2"
               className="form-control"
             />
           </div>
           <div className="col-12 mt-3">
-            <button type="submit" className="btn btn-success w-100 py-2 fs-5">
-              + Add Bill
+            <button type="submit" className="btn btn-danger w-100 py-2 fs-5">
+              + Add Expense
             </button>
           </div>
         </div>
       </form>
 
       {/* Edit Modal */}
-      {editingBill && (
+      {editingExpense && (
         <div
           className="modal fade show d-block"
           tabIndex="-1"
@@ -240,29 +239,29 @@ const KitchenBills = () => {
         >
           <div className="modal-dialog">
             <div className="modal-content rounded shadow">
-              <div className="modal-header bg-primary text-white">
-                <h5 className="modal-title">Edit Bill</h5>
+              <div className="modal-header bg-danger text-white">
+                <h5 className="modal-title">Edit Expense</h5>
                 <button
                   type="button"
                   className="btn-close btn-close-white"
-                  onClick={() => setEditingBill(null)}
+                  onClick={() => setEditingExpense(null)}
                 />
               </div>
               <div className="modal-body">
                 <form onSubmit={handleUpdate}>
                   <div className="mb-3">
-                    <label className="form-label fw-semibold">Bill Type</label>
+                    <label className="form-label fw-semibold">Expense Category</label>
                     <select
-                      name="type"
-                      value={editData.type}
+                      name="category"
+                      value={editData.category}
                       onChange={handleEditChange}
                       className="form-select"
                     >
-                      <option>Gas</option>
-                      <option>Electricity</option>
-                      <option>Water</option>
-                      <option>Cleaning</option>
-                      <option>Repairs</option>
+                      <option>Marketing</option>
+                      <option>Admin Supplies</option>
+                      <option>Repairs & Maintenance</option>
+                      <option>Software/Subscription</option>
+                      <option>Training</option>
                       <option>Other</option>
                     </select>
                   </div>
@@ -316,13 +315,13 @@ const KitchenBills = () => {
                     />
                   </div>
                   <div className="d-flex gap-2">
-                    <button type="submit" className="btn btn-primary w-100">
+                    <button type="submit" className="btn btn-danger w-100">
                       Save Changes
                     </button>
                     <button
                       type="button"
-                      className="btn btn-danger"
-                      onClick={() => handleDelete(editingBill)}
+                      className="btn btn-secondary"
+                      onClick={() => handleDelete(editingExpense)}
                     >
                       Delete
                     </button>
@@ -334,15 +333,15 @@ const KitchenBills = () => {
         </div>
       )}
 
-      {/* Bills Table */}
+      {/* Expenses Table */}
       <div className="mt-4">
-        <h4 className="mb-3 text-secondary">🧾 Recent Bills</h4>
+        <h4 className="mb-3 text-secondary">💸 Recent Expenses</h4>
         <div className="table-responsive shadow-sm rounded border">
           <table className="table table-bordered table-striped align-middle mb-0">
             <thead className="table-dark">
               <tr>
                 <th>Date</th>
-                <th>Type</th>
+                <th>Category</th>
                 <th>Amount</th>
                 <th>Payment Method</th>
                 <th>Description</th>
@@ -350,32 +349,32 @@ const KitchenBills = () => {
               </tr>
             </thead>
             <tbody>
-              {bills.length === 0 ? (
+              {expenses.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="text-center text-muted py-4">
-                    No bills found
+                  <td colSpan="6" className="text-center text-muted py-4">
+                    No expenses found
                   </td>
                 </tr>
               ) : (
-                bills.map(bill => (
-                  <tr key={bill._id}>
-                    <td>{new Date(bill.date).toLocaleDateString()}</td>
-                    <td>{bill.type}</td>
-                    <td>{symbol}{bill.amount.toFixed(2)}</td>
-                    <td>{bill.paymentMethod || "Cash"}</td>
-                    <td>{bill.description || "-"}</td>
+                expenses.map(expense => (
+                  <tr key={expense._id}>
+                    <td>{new Date(expense.date).toLocaleDateString()}</td>
+                    <td>{expense.category}</td>
+                    <td>{symbol}{expense.amount.toFixed(2)}</td>
+                    <td>{expense.paymentMethod || "Cash"}</td>
+                    <td>{expense.description || "-"}</td>
                     <td className="text-center">
                       <button
-                        className="btn btn-sm btn-primary me-2"
-                        onClick={() => openEditModal(bill)}
-                        title="Edit Bill"
+                        className="btn btn-sm btn-warning me-2"
+                        onClick={() => openEditModal(expense)}
+                        title="Edit Expense"
                       >
                           ✏️ Edit
                       </button>
                       <button
                         className="btn btn-sm btn-danger"
-                        onClick={() => handleDelete(bill._id)}
-                        title="Delete Bill"
+                        onClick={() => handleDelete(expense._id)}
+                        title="Delete Expense"
                       >
                         🗑️ Delete
                       </button>
@@ -386,25 +385,11 @@ const KitchenBills = () => {
             </tbody>
           </table>
         </div>
-        </div>
-
-      {/* Monthly Summary */}
-      {/* <div className="mt-4 p-3 bg-white border rounded shadow-sm">
-        <h5>Monthly Summary</h5>
-        <ul className="list-group">
-          <li className="list-group-item d-flex justify-content-between align-items-center">
-            <span>Total Expenses</span>
-            <strong>
-              {symbol}
-              {bills.reduce((sum, b) => sum + b.amount, 0).toFixed(2)}
-            </strong>
-          </li>
-        </ul>
-      </div> */}
+      </div>
 
       <ToastContainer />
     </div>
   );
 };
 
-export default KitchenBills;
+export default OtherExpenses;

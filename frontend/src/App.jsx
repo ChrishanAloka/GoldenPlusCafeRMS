@@ -18,6 +18,7 @@ import KitchenBills from "./components/KitchenBills";
 import KitchenOrderHistory from "./components/KitchenOrderHistory";
 
 import CashierLanding from "./components/CashierLanding";
+import CashierSummery from "./components/CashierSummery";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 import CashierOrderHistory from "./components/CashierOrderHistory";
@@ -63,6 +64,8 @@ import AdminDeliveryCharge from "./components/AdminDeliveryCharge";
 import TakeawayOrdersPage from "./components/TakeawayOrdersPage";
 import RegisterDriverPage from "./components/RegisterDriverPage";
 
+import OtherExpenses from "./components/OtherExpenses";
+import OtherIncome from "./components/OtherIncome";
 
 <Route path="/unauthorized" element={<Unauthorized />} />
 
@@ -127,11 +130,14 @@ function App() {
         <Route path="/:role/bills" element={<KitchenBills />} /> 
 
         <Route path="/cashier" element={<CashierLanding />} />
+        <Route path="/cashier-summery" element={<CashierSummery />} />
         <Route path="/cashier/orders" element={<CashierOrderHistory />} />
         <Route path="/cashier/today" element={<CashierDashboard />} />
         <Route path="/cashier/takeaway-orders" element={<TakeawayOrdersPage />} />
         <Route path="/cashier/driver-register" element={<RegisterDriverPage />} />
         <Route path="/cashier/attendance/add" element={<AddAttendance />} />
+        <Route path="/cashier/other-expences" element={<OtherExpenses />} />
+        <Route path="/cashier/other-income" element={<OtherIncome />} />
       </Route>
       
       <Route path="/cashier/takeaway-orders" element={<TakeawayOrdersPage />} />
