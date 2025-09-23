@@ -18,6 +18,10 @@ const expenseSchema = new mongoose.Schema({
   billNo: {
     type: String,
     required: true
+  },
+  paymentMethod: {
+    type: String,
+    default: "Cash"
   }
 });
 

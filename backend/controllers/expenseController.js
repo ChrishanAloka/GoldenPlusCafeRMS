@@ -1,7 +1,7 @@
 const Expense = require("../models/Expense");
 
 exports.addExpense = async (req, res) => {
-  const { supplier, amount, description, date, billNo } = req.body;
+  const { supplier, amount, description, date, billNo, paymentMethod } = req.body;
 
   if (!supplier || !amount || !billNo) {
     return res.status(400).json({ error: "Missing required fields" });
@@ -13,7 +13,8 @@ exports.addExpense = async (req, res) => {
       amount,
       description,
       date: date || Date.now(),
-      billNo
+      billNo,
+      paymentMethod: paymentMethod || "Cash"
     });
 
     await newExpense.save();
@@ -37,7 +38,7 @@ exports.getAllExpenses = async (req, res) => {
 // PUT /api/auth/expense/:id
 exports.updateExpense = async (req, res) => {
   const { id } = req.params;
-  const { amount, description, date, billNo } = req.body;
+  const { amount, description, date, billNo, paymentMethod } = req.body;
 
   if (!amount || !billNo) {
     return res.status(400).json({ error: "Amount and Bill No are required" });
@@ -46,7 +47,7 @@ exports.updateExpense = async (req, res) => {
   try {
     const updated = await Expense.findByIdAndUpdate(
       id,
-      { amount, description, date, billNo },
+      { amount, description, date, billNo, paymentMethod },
       { new: true }
     ).populate("supplier", "name contact");
 

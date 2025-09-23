@@ -2,6 +2,8 @@ const Order = require("../models/Order");
 const Expense = require("../models/Expense");
 const KitchenBill = require("../models/KitchenBill");
 const Salary = require("../models/Salary");
+const OtherIncome = require("../models/OtherIncome");
+const OtherExpense = require("../models/OtherExpense");
 
 exports.getAdminSummary = async (req, res) => {
   const { startDate, endDate } = req.query;
@@ -15,22 +17,31 @@ exports.getAdminSummary = async (req, res) => {
       };
     }
 
-    // Fetch data sources
-    const [orders, expenses, bills, salaries] = await Promise.all([
+    // Fetch all data sources — ✅ ADDED OtherIncome & OtherExpense
+    const [orders, expenses, bills, salaries, otherIncomes, otherExpenses] = await Promise.all([
       Order.find({ createdAt: query }),
       Expense.find({ date: query }).select("amount"),
       KitchenBill.find({ date: query }).select("amount"),
-      Salary.find({ date: query }).select("total")
+      Salary.find({ date: query }).select("total"),
+      OtherIncome.find({ date: query }).select("amount"),
+      OtherExpense.find({ date: query }).select("amount")
     ]);
 
     // ✅ Calculate totals
     const totalIncome = orders.reduce((sum, o) => sum + o.totalPrice, 0);
+    const totalOtherIncome = otherIncomes.reduce((sum, i) => sum + i.amount, 0);
     const totalSupplierExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
     const totalBills = bills.reduce((sum, b) => sum + b.amount, 0);
     const totalSalaries = salaries.reduce((sum, s) => sum + s.total, 0);
+    const totalOtherExpenses = otherExpenses.reduce((sum, e) => sum + e.amount, 0);
 
-    const totalCost = totalSupplierExpenses + totalBills + totalSalaries;
-    const netProfit = totalIncome - totalCost;
+    const totalCost =
+      totalSupplierExpenses +
+      totalBills +
+      totalSalaries +
+      totalOtherExpenses;
+
+    const netProfit = totalIncome + totalOtherIncome - totalCost;
 
     // ✅ Count orders
     const totalOrders = orders.length;
@@ -68,9 +79,11 @@ exports.getAdminSummary = async (req, res) => {
 
     res.json({
       totalIncome,
+      totalOtherIncome,
       totalSupplierExpenses,
       totalBills,
       totalSalaries,
+      totalOtherExpenses, 
       totalCost,
       netProfit,
       totalOrders,
@@ -92,7 +105,7 @@ exports.getMonthlyTrend = async (req, res) => {
     const selectedYear = parseInt(year) || new Date().getFullYear();
 
     // Fetch all data for that year
-    const [orders, expenses, bills, salaries] = await Promise.all([
+     const [orders, expenses, bills, salaries, otherIncomes, otherExpenses] = await Promise.all([
       Order.find({
         createdAt: {
           $gte: new Date(`${selectedYear}-01-01`),
@@ -119,7 +132,21 @@ exports.getMonthlyTrend = async (req, res) => {
           $gte: new Date(`${selectedYear}-01-01`),
           $lte: new Date(`${selectedYear}-12-31`)
         }
-      }).select("total date")
+      }).select("total date"),
+
+      OtherIncome.find({
+        date: {
+          $gte: new Date(`${selectedYear}-01-01`),
+          $lte: new Date(`${selectedYear}-12-31`)
+        }
+      }).select("amount date"),
+
+      OtherExpense.find({
+        date: {
+          $gte: new Date(`${selectedYear}-01-01`),
+          $lte: new Date(`${selectedYear}-12-31`)
+        }
+      }).select("amount date")
     ]);
 
     // Helper to group by month
@@ -139,6 +166,8 @@ exports.getMonthlyTrend = async (req, res) => {
     const expenseData = groupByMonth(expenses, "date", "amount");
     const billData = groupByMonth(bills, "date", "amount");
     const salaryData = groupByMonth(salaries, "date", "total");
+    const otherIncomeData = groupByMonth(otherIncomes, "date", "amount"); // ✅ NEW
+    const otherExpenseData = groupByMonth(otherExpenses, "date", "amount"); // ✅ NEW
 
     // Group orders by month
     const orderCountByMonth = Array(12).fill(0);
@@ -166,9 +195,11 @@ exports.getMonthlyTrend = async (req, res) => {
         "Dec"
       ],
       income: incomeData,
+      otherIncome: otherIncomeData,
       supplierExpenses: expenseData,
       utilityBills: billData,
       salaries: salaryData,
+      otherExpenses: otherExpenseData,
       orderCounts: orderCountByMonth
     });
   } catch (err) {
@@ -188,11 +219,12 @@ exports.getExpenseSummary = async (req, res) => {
     const start = new Date(year, month - 1, 1);
     const end = new Date(year, month - 1, 31);
 
-    // Fetch data
-    const [expenses, bills, salaries] = await Promise.all([
+    // ✅ Fetch data — ADDED OtherExpense
+    const [expenses, bills, salaries, otherExpenses] = await Promise.all([
       Expense.find({ date: { $gte: start, $lte: end } }),
       KitchenBill.find({ date: { $gte: start, $lte: end } }),
-      Salary.find({ date: { $gte: start, $lte: end } })
+      Salary.find({ date: { $gte: start, $lte: end } }),
+      OtherExpense.find({ date: { $gte: start, $lte: end } }) // ✅ NEW
     ]);
 
     // Helper: sum field across array
@@ -202,10 +234,12 @@ exports.getExpenseSummary = async (req, res) => {
       totalSupplierExpenses: sumField(expenses, "amount"),
       totalBills: sumField(bills, "amount"),
       totalSalaries: sumField(salaries, "total"),
+      totalOtherExpenses: sumField(otherExpenses, "amount"), // ✅ NEW
       breakdown: {
         supplierExpenses: expenses.map(e => ({ date: e.date, amount: e.amount })),
         utilityBills: bills.map(b => ({ date: b.date, amount: b.amount })),
-        salaries: salaries.map(s => ({ date: s.date, total: s.total }))
+        salaries: salaries.map(s => ({ date: s.date, total: s.total })),
+        otherExpenses: otherExpenses.map(e => ({ date: e.date, amount: e.amount })) // ✅ NEW
       }
     });
   } catch (err) {

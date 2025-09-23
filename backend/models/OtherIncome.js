@@ -1,11 +1,10 @@
-// backend/models/KitchenBill.js
+// backend/models/OtherIncome.js
 const mongoose = require("mongoose");
 
-const kitchenBillSchema = new mongoose.Schema({
-  type: {
+const otherIncomeSchema = new mongoose.Schema({
+  source: {
     type: String,
-    required: true,
-    enum: ["Gas", "Electricity", "Water", "Cleaning", "Repairs", "Other"]
+    required: true
   },
   amount: { type: Number, required: true },
   date: { type: Date, default: Date.now },
@@ -20,4 +19,4 @@ const kitchenBillSchema = new mongoose.Schema({
   }
 });
 
-module.exports = mongoose.model("KitchenBill", kitchenBillSchema);
+module.exports = mongoose.model("OtherIncome", otherIncomeSchema);

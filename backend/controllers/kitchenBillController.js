@@ -13,7 +13,7 @@ exports.getBills = async (req, res) => {
 
 // Add new bill
 exports.addBill = async (req, res) => {
-  const { type, amount, description, date } = req.body;
+  const { type, amount, description, date, paymentMethod  } = req.body;
 
   if (!type || !amount || !date) {
     return res.status(400).json({ error: "Type, amount, and date are required" });
@@ -25,6 +25,7 @@ exports.addBill = async (req, res) => {
       amount,
       description,
       date: new Date(date),
+      paymentMethod: paymentMethod || "Cash",
       addedBy: req.user.id
     });
 

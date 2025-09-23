@@ -47,6 +47,10 @@ const deliveryChargeController = require("../controllers/deliveryChargeControlle
 
 const driverController = require("../controllers/driverController");
 
+const {submitShiftSummary,  getShiftSummaries,  getShiftSummaryByDate} = require("../controllers/cashierShiftSummaryController");
+
+const {  getIncomes,  addIncome,  updateIncome,  deleteIncome, getIncomesByDate} = require("../controllers/otherIncomeController");
+const {  getExpenses,  addExpense,  updateExpense,  deleteExpense, getExpensesByDate} = require("../controllers/otherExpenseController");
 
 // Public routes
 router.post("/signup", signup);
@@ -152,7 +156,7 @@ router.post("/salary/add", authMiddleware(["admin"]), salaryController.addSalary
 router.get("/salaries", authMiddleware(["admin"]), salaryController.getAllSalaries);
 
 //Admin Dashbord Charts
-router.get("/admin/summary", authMiddleware(["admin"]), adminController.getAdminSummary);
+router.get("/admin/summary", authMiddleware(["admin", "cashier"]), adminController.getAdminSummary);
 router.get("/admin/trend/monthly", authMiddleware(["admin"]), adminController.getMonthlyTrend);
 router.get("/admin/expenses", authMiddleware(["admin"]), adminController.getExpenseSummary);
 
@@ -170,5 +174,21 @@ router.get("/drivers", authMiddleware(["admin", "cashier"]), driverController.ge
 router.post("/drivers", authMiddleware(["admin", "cashier"]), driverController.registerDriver);
 router.put("/drivers/:id", authMiddleware(["admin", "cashier"]), driverController.updateDriver);
 router.delete("/drivers/:id", authMiddleware(["admin", "cashier"]), driverController.deleteDriver);
+
+router.post("/cashier/shift-summary/submitshift", authMiddleware(["admin", "cashier"]), submitShiftSummary); // Submit shift summary
+router.get("/cashier/shift-summary/", authMiddleware(["admin", "cashier"]), getShiftSummaries); // Get list of summaries (with optional filters)
+router.get("/cashier/shift-summary/:date", authMiddleware(["admin", "cashier"]), getShiftSummaryByDate); // Get summary for specific date
+
+router.get("/income/other/", authMiddleware(["admin", "cashier"]), getIncomes);
+router.post("/income/other/", authMiddleware(["admin", "cashier"]), addIncome);
+router.put("/income/other/:id", authMiddleware(["admin", "cashier"]), updateIncome);
+router.delete("/income/other/:id", authMiddleware(["admin", "cashier"]), deleteIncome);
+router.get("/income/other/by-date", authMiddleware(["admin", "cashier"]), getIncomesByDate);
+
+router.get("/expense/other/", authMiddleware(["admin", "cashier"]), getExpenses);
+router.post("/expense/other/", authMiddleware(["admin", "cashier"]), addExpense);
+router.put("/expense/other/:id", authMiddleware(["admin", "cashier"]), updateExpense);
+router.delete("/expense/other/:id", authMiddleware(["admin", "cashier"]), deleteExpense);
+router.get("/expense/other/by-date", authMiddleware(["admin", "cashier"]), getExpensesByDate);
 
 module.exports = router;
