@@ -16,6 +16,8 @@ const AdminDashboard = () => {
     totalCost: 0,
     netProfit: 0,
     totalOrders: 0,
+    totalOrdersIncome: 0,
+    totalOrdersNetIncome: 0,
     statusCounts: {},
     paymentBreakdown: { cash: 0, cashdue: 0, card: 0, bank: 0 },
     topMenus: []
@@ -209,6 +211,19 @@ const AdminDashboard = () => {
     <div className="row g-3 mb-4">
       {[
         { label: "Total Orders", value: summary.totalOrders, color: "primary", icon: "🛒" },
+        { label: "Orders Income / Orders Net Income", value: 
+          `${symbol}${formatCurrency(summary.totalOrdersIncome)} / ${symbol}${formatCurrency(summary.totalOrdersNetIncome)}`,
+          // (
+          //   <>
+          //     {symbol}{formatCurrency(summary.totalOrdersIncome)}
+          //     <br />
+          //     Net {symbol}{formatCurrency(summary.totalOrdersNetIncome)}
+          //   </>
+          // ), 
+          color: "primary", icon: "🛒" },
+        { label: "Other Income", value: `${symbol}${formatCurrency(summary.totalOtherIncome)}`, color: "success", icon: "🎁"}, // ✅ NEW
+        { label: "Other Expenses", value: `${symbol}${formatCurrency(summary.totalOtherExpenses)}`, color: "danger", icon: "🔧"}, // ✅ NEW
+        
         { label: "Total Income", value: `${symbol}${formatCurrency(summary.totalIncome)}`, color: "success", icon: "💰" },
         { label: "Total Cost", value: `${symbol}${formatCurrency(summary.totalCost)}`, color: "danger", icon: "📉" },
         {
@@ -216,8 +231,7 @@ const AdminDashboard = () => {
           value: `${summary.netProfit >= 0 ? "+" : "-"}${symbol}${formatCurrency(Math.abs(summary.netProfit))}`,
           color: summary.netProfit >= 0 ? "info" : "warning",
           icon: summary.netProfit >= 0 ? "📈" : "⚠️",
-        },{ label: "Other Income", value: `${symbol}${formatCurrency(summary.totalOtherIncome)}`, color: "success", icon: "🎁"}, // ✅ NEW
-        { label: "Other Expenses", value: `${symbol}${formatCurrency(summary.totalOtherExpenses)}`, color: "danger", icon: "🔧"} // ✅ NEW
+        }
       ].map((card, idx) => (
         <div className="col-md-3" key={idx}>
           <div className={`card bg-${card.color} text-white shadow-sm h-100`}>

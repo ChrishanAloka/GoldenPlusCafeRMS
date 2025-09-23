@@ -17,6 +17,7 @@ const TodaySummary = () => {
     totalCost: 0,
     netProfit: 0,
     totalOrders: 0,
+    totalOrdersIncome: 0,
     statusCounts: {},
     paymentBreakdown: { cash: 0, cashdue: 0, card: 0, bank: 0 },
     topMenus: []
@@ -61,16 +62,16 @@ const TodaySummary = () => {
 
   // ✅ Cost Breakdown Chart Data
   const costChartData = {
-    labels: ["Supplier Expenses", "Utility Bills", "Staff Salaries", "Other Expenses"], // ✅ UPDATED
+    labels: [ "Other Expenses"], // ✅ UPDATED
     datasets: [{
       label: "Expenses",
       data: [
-        summary.totalSupplierExpenses,
-        summary.totalBills,
-        summary.totalSalaries,
+        // summary.totalSupplierExpenses,
+        // summary.totalBills,
+        // summary.totalSalaries,
         summary.totalOtherExpenses // ✅ NEW
       ],
-      backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56", "#FF9F40"] // ✅ ADDED Orange for Other Expenses
+      backgroundColor: [ "#FF9F40"] // ✅ ADDED Orange for Other Expenses
     }]
   };
 
@@ -120,7 +121,7 @@ const TodaySummary = () => {
       <div className="row g-3 mb-4">
         {[
           { label: "Total Orders", value: summary.totalOrders, color: "primary", icon: "🛒" },
-          { label: "Total Income", value: `${symbol}${formatCurrency(summary.totalIncome)}`, color: "success", icon: "💰" },
+          { label: "Orders Income", value: `${symbol}${formatCurrency(summary.totalOrdersIncome)}`, color: "success", icon: "💰" },
           { label: "Other Income", value: `${symbol}${formatCurrency(summary.totalOtherIncome)}`, color: "success", icon: "🎁"}, // ✅ NEW
           { label: "Other Expenses", value: `${symbol}${formatCurrency(summary.totalOtherExpenses)}`, color: "danger", icon: "🔧"} // ✅ NEW
           // { label: "Total Cost", value: `${symbol}${formatCurrency(summary.totalCost)}`, color: "danger", icon: "📉" },

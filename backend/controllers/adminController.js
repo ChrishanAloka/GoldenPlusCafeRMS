@@ -28,12 +28,24 @@ exports.getAdminSummary = async (req, res) => {
     ]);
 
     // ✅ Calculate totals
-    const totalIncome = orders.reduce((sum, o) => sum + o.totalPrice, 0);
+    
     const totalOtherIncome = otherIncomes.reduce((sum, i) => sum + i.amount, 0);
     const totalSupplierExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
     const totalBills = bills.reduce((sum, b) => sum + b.amount, 0);
     const totalSalaries = salaries.reduce((sum, s) => sum + s.total, 0);
     const totalOtherExpenses = otherExpenses.reduce((sum, e) => sum + e.amount, 0);
+    const totalOrdersIncome = orders.reduce((sum, o) => sum + o.totalPrice, 0);
+    // ✅ Calculate totalOrdersNetIncome: sum of (item.netProfit * item.quantity) for all items in all orders
+    const totalOrdersNetIncome = orders.reduce((sum, order) => {
+      const orderNetProfit = order.items.reduce((itemSum, item) => {
+        // Ensure netProfit exists and is a number
+        const profitPerUnit = item.netProfit || 0;
+        return itemSum + (profitPerUnit * item.quantity);
+      }, 0);
+      return sum + orderNetProfit;
+    }, 0);
+
+    const totalIncome = totalOrdersIncome + totalOtherIncome;
 
     const totalCost =
       totalSupplierExpenses +
@@ -41,7 +53,7 @@ exports.getAdminSummary = async (req, res) => {
       totalSalaries +
       totalOtherExpenses;
 
-    const netProfit = totalIncome + totalOtherIncome - totalCost;
+    const netProfit = totalIncome - totalCost;
 
     // ✅ Count orders
     const totalOrders = orders.length;
@@ -87,6 +99,8 @@ exports.getAdminSummary = async (req, res) => {
       totalCost,
       netProfit,
       totalOrders,
+      totalOrdersIncome,
+      totalOrdersNetIncome,
       statusCounts,
       paymentBreakdown,
       topMenus

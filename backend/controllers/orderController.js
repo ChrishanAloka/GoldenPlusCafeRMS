@@ -50,12 +50,15 @@ exports.createOrder = async (req, res) => {
         });
       }
 
+      const netProfitPerUnit = menuItem.price - (menuItem.cost || 0);
+
       subtotal += menuItem.price * item.quantity;
 
       validItems.push({
         menuId: menuItem._id,
         name: menuItem.name,
         price: menuItem.price,
+        netProfit: netProfitPerUnit,
         imageUrl: menuItem.imageUrl,
         quantity: item.quantity
       });
