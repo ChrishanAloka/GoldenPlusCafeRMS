@@ -437,7 +437,7 @@ const finalTotal = subtotal + serviceCharge + deliveryCharge;
               const lowStock = menu.currentQty <= menu.minimumQty;
 
               return(
-              <div key={menu._id} className="col-md-4 col-lg-3 col-xl-2">
+              <div key={menu._id} className="col-12 col-md-4 col-lg-4 col-xl-3">
                 <div className="card shadow-sm h-100 border-0">
                   <img
                     src={
