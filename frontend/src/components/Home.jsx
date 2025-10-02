@@ -43,9 +43,9 @@ const Home = () => {
           {/* <Link to="/kitchen-login" className="btn btn-outline-dark btn-lg">
             Kitchen Login
           </Link> */}
-          {/* <Link to="/admin-login" className="btn btn-outline-success btn-lg">
+          <Link to="/admin-login" className="btn btn-outline-success btn-lg">
             Admin Login
-          </Link> */}
+          </Link>
         </div>
 
         <hr className="my-4" />

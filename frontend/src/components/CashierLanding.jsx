@@ -444,7 +444,7 @@ const finalTotal = subtotal + serviceCharge + deliveryCharge;
                     menu.imageUrl.startsWith("https")
                       ? menu.imageUrl
                       : `https://goldenpluscaferms.onrender.com${menu.imageUrl}`
-                  }
+                    }
                     alt={menu.name}
                     style={{ height: "150px", width:"100%" ,objectFit: "contain" }}
                     onError={(e) => {
