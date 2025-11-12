@@ -7,19 +7,20 @@ import {
   FaChartBar, FaUserTie, FaCalendarCheck, FaTruck, FaMoneyBillWave,
   FaMoneyCheckAlt, FaUtensils, FaDollarSign, FaShoppingCart, FaHistory,
   FaBookOpen, FaClipboardList, FaUserCircle, FaPercentage, FaTruckLoading, 
-  FaFirstOrder,FaMotorcycle,FaUserClock,FaCashRegister,FaBookReader,FaCoins,FaWallet
+  FaFirstOrder,FaMotorcycle,FaUserClock,FaCashRegister,FaBookReader,FaCoins,FaWallet,FaPrint,FaUserTag
 } from "react-icons/fa";
 import "./Sidebar.css";
 import NotificationCenter from "./NotificationCenter";
 
 const RoleLayout = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userDropdown, setUserDropdown] = useState(false);
   const { user, logout } = useAuth();
   const countdown = useTokenCountdown();
   const location = useLocation();
   const dropdownRef = useRef();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isHovered, setIsHovered] = useState(false);
 
   // Auto detect mobile view
   useEffect(() => {
@@ -43,13 +44,15 @@ const RoleLayout = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const isSidebarExpanded = sidebarOpen || (isHovered && !isMobile);
+
   const createMenuItem = (to, label, Icon) => {
     const isActive = location.pathname === to;
     return (
-      <li title={!sidebarOpen ? label : ""} key={to}>
+      <li title={!isSidebarExpanded ? label : ""} key={to}>
         <Link to={to} className={`menu-link ${isActive ? "active" : ""}`}>
           <Icon className="menu-icon" />
-          {sidebarOpen && <span className="menu-label">{label}</span>}
+          {isSidebarExpanded && <span className="menu-label">{label}</span>}
         </Link>
       </li>
     );
@@ -61,29 +64,31 @@ const RoleLayout = () => {
         return (
           <>
             {createMenuItem("/admin", "Dashboard", FaTachometerAlt)}
-            {createMenuItem("/cashier/today", "View Today", FaBookOpen)}
-            {createMenuItem("/cashier-summery", "Cashier Summery", FaBookReader)}
+            {createMenuItem("/cashier/today", "Daily Report", FaBookOpen)}
             {createMenuItem("/cashier", "Order Management", FaCashRegister)}
-            
+            {createMenuItem("/kitchen/menu", "Manage Menu", FaClipboardList)}
             {createMenuItem("/kitchen", "Live Orders", FaShoppingCart)}
             {createMenuItem("/cashier/orders", "Order History", FaHistory)}
-
-            {createMenuItem("/kitchen/menu", "Manage Menu", FaClipboardList)}
-                        
             {createMenuItem("/cashier/takeaway-orders", "Takeaway Orders", FaFirstOrder)}
+            {createMenuItem("/cashier-summery", "Cashier Summery", FaBookReader)}
 
             {createMenuItem("/admin/users", "User Management", FaUsers)}
             {createMenuItem("/admin/report", "Monthly Report", FaChartBar)}
+            {createMenuItem("/admin/customers", "Custoemrs", FaUserTag)}
             {createMenuItem("/admin/employees", "Employees", FaUserTie)}
+            
             {createMenuItem("/kitchen/attendance/add", "Live Attendance", FaUserClock)}
             {createMenuItem("/admin/attendance", "Attendance History", FaCalendarCheck)}
             {createMenuItem("/cashier/driver-register", "Takeaway Driver Register", FaMotorcycle)}
             {createMenuItem("/admin/suppliers", "Suppliers Register", FaTruck)}
             {createMenuItem("/admin/expenses", "Supplier Expenses", FaMoneyBillWave)}
+            {createMenuItem("/cashier/other-income", "Other Incomes", FaCoins)}
+            {createMenuItem("/cashier/other-expences", "Other Expences", FaWallet)}
             {createMenuItem("/admin/bills", "Restaurant Bills", FaFileInvoice)}            
             {createMenuItem("/admin/salaries", "Salary Payments", FaMoneyCheckAlt)}
             {createMenuItem("/admin/service-charge", "Service Charge", FaPercentage)}
-            {createMenuItem("/admin/delivery-charge", "Delivery Charge", FaTruckLoading)}
+            {createMenuItem("/admin/delivery-charges", "Delivery Charge", FaTruckLoading)}
+            {createMenuItem("/printer-settings", "Printer Settings", FaPrint)}
             {createMenuItem("/admin/signup-key", "Signup Key", FaKey)}
             {createMenuItem("/admin/currency", "Currency", FaDollarSign)}
           </>
@@ -96,17 +101,14 @@ const RoleLayout = () => {
             {createMenuItem("/kitchen", "Live Orders", FaShoppingCart)}
             {createMenuItem("/cashier/orders", "Order History", FaHistory)}
             {createMenuItem("/cashier/takeaway-orders", "Takeaway Orders", FaFirstOrder)}
-
-            {createMenuItem("/cashier/today", "View Today", FaBookOpen)}
+            {createMenuItem("/cashier/today", "Daily Report", FaBookOpen)}
             {createMenuItem("/cashier-summery", "Cashier Summery", FaBookReader)}
-
             {createMenuItem("/cashier/other-income", "Other Incomes", FaCoins)}
             {createMenuItem("/cashier/other-expences", "Other Expences", FaWallet)}
-            
             {createMenuItem("/cashier/driver-register", "Driver Register", FaMotorcycle)}
-            
             {createMenuItem("/kitchen/kitchen-requestsForm", "Admin Requests", FaUtensils)}
             {createMenuItem("/kitchen/attendance/add", "Live Attendance", FaUserClock)}
+            {createMenuItem("/printer-settings", "Printer Settings", FaPrint)}
             
           </>
         );
@@ -125,12 +127,30 @@ const RoleLayout = () => {
     }
   };
 
+  const getSidebarClass = () => {
+  // Open if: user toggled it OR (hovering + desktop + not manually opened)
+    const isOpen = sidebarOpen || (isHovered && !isMobile);
+    return isOpen ? "open" : "collapsed";
+  };
+
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+    if (!sidebarOpen) {
+      setIsHovered(false); // close hover if manually opening
+    }
+  };
+
   return (
     <div className="layout d-flex">
       {!isMobile || sidebarOpen ? (
-        <aside className={`sidebar ${sidebarOpen ? "open" : "collapsed"}`}>
+        <aside 
+        // className={`sidebar ${sidebarOpen ? "open" : "collapsed"}`}
+        className={`sidebar ${getSidebarClass()}`}
+        onMouseEnter={() => !isMobile && !sidebarOpen && setIsHovered(true)}
+        onMouseLeave={() => !isMobile && !sidebarOpen && setIsHovered(false)}
+        >
           <div className="sidebar-header d-flex align-items-center">
-            {sidebarOpen && (
+            {isSidebarExpanded && (
               <>
                 <img
                   src="/logo.jpg"
@@ -144,7 +164,7 @@ const RoleLayout = () => {
                     boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
                   }}
                 />
-                <h3 className="justify-content-left sidebar-title mb-0">Golden Plus Cafe RMS  </h3>
+                <h3 className="justify-content-left sidebar-title mb-0">Gasma Chinese Restaurant-RMS</h3>
               </>
             )}
           </div>
@@ -155,7 +175,7 @@ const RoleLayout = () => {
       <div className="main-content flex-grow-1">
         <header className="top-navbar">
           <div className="navbar-left">
-            <button className="btn-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
+            <button className="btn-toggle" onClick={toggleSidebar}>
               <FaBars />
             </button>
             <span className="session-timer">⏳ Session expires in: {countdown}</span>

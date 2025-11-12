@@ -1,9 +1,27 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
+import { 
+  Chart as ChartJS, 
+  ArcElement, 
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip, 
+  Legend 
+} from "chart.js";
 import { Doughnut } from "react-chartjs-2";
+import { Bar } from 'react-chartjs-2';
 
-ChartJS.register(ArcElement, Tooltip, Legend);
+ChartJS.register(
+  ArcElement,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title, 
+  Tooltip, 
+  Legend
+);
 
 const AdminDashboard = () => {
   const [summary, setSummary] = useState({
@@ -16,9 +34,13 @@ const AdminDashboard = () => {
     totalCost: 0,
     netProfit: 0,
     totalOrders: 0,
+    totaldeliveryOrders: 0,
+    totaldeliveryOrdersIncome: 0,
     totalOrdersIncome: 0,
     totalOrdersNetIncome: 0,
     statusCounts: {},
+    delayedOrders: 0,
+    nextDayStatusUpdates: 0,
     paymentBreakdown: { cash: 0, cashdue: 0, card: 0, bank: 0 },
     topMenus: []
   });
@@ -27,6 +49,8 @@ const AdminDashboard = () => {
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
   const [loading, setLoading] = useState(true);
+
+  const symbol = localStorage.getItem("currencySymbol") || "$";
 
   // Load dashboard data
   useEffect(() => {
@@ -85,12 +109,154 @@ const AdminDashboard = () => {
     }
   };
 
+  // // Prepare chart data for Order Type + Delivery Places
+  // const orderTypeLabels = [];
+  // const orderTypeCounts = [];
+  // const orderTypeTotals = [];
+
+  // // Add Dine-In and Takeaway
+  // ["Dine-In", "Takeaway"].forEach(type => {
+  //   const data = summary.orderTypeBreakdown?.[type] || { count: 0, total: 0 };
+  //   orderTypeLabels.push(type);
+  //   orderTypeCounts.push(data.count);
+  //   orderTypeTotals.push(data.total);
+  // });
+
+  // // Add Delivery as a group, but expand by place
+  // const deliveryData = summary.orderTypeBreakdown?.Delivery || { byPlace: {} };
+  // const deliveryPlaces = Object.keys(deliveryData.byPlace);
+
+  // if (deliveryPlaces.length > 0) {
+  //   deliveryPlaces.forEach(place => {
+  //     const placeData = deliveryData.byPlace[place];
+  //     orderTypeLabels.push(`Delivery: ${place}`);
+  //     orderTypeCounts.push(placeData.count);
+  //     orderTypeTotals.push(placeData.total);
+  //   });
+  // } else {
+  //   // Fallback if no delivery places
+  //   orderTypeLabels.push("Delivery");
+  //   orderTypeCounts.push(deliveryData.count);
+  //   orderTypeTotals.push(deliveryData.total);
+  // }
+
+  // const orderTypeChartData = {
+  //   labels: orderTypeLabels,
+  //   datasets: [
+  //     {
+  //       label: 'Number of Orders',
+  //       data: orderTypeCounts,
+  //       backgroundColor: 'rgba(54, 162, 235, 0.6)',
+  //       yAxisID: 'y'
+  //     },
+  //     {
+  //       label: 'Total Income ($)',
+  //       data: orderTypeTotals,
+  //       backgroundColor: 'rgba(255, 99, 132, 0.6)',
+  //       yAxisID: 'y1'
+  //     }
+  //   ]
+  // };
+
+  // const orderTypeChartOptions = {
+  //   responsive: true,
+  //   scales: {
+  //     y: {
+  //       type: 'linear',
+  //       display: true,
+  //       position: 'left',
+  //       title: {
+  //         display: true,
+  //         text: 'Number of Orders'
+  //       }
+  //     },
+  //     y1: {
+  //       type: 'linear',
+  //       display: true,
+  //       position: 'right',
+  //       title: {
+  //         display: true,
+  //         text: 'Total Income ($)'
+  //       },
+  //       grid: {
+  //         drawOnChartArea: false
+  //       }
+  //     }
+  //   }
+  // };
+
+  const orderTypeData = summary.orderTypeSummary || {
+    dineIn: { count: 0, total: 0 },
+    takeaway: { count: 0, total: 0 },
+    delivery: { count: 0, total: 0 }
+  };
+
+  const orderTypeLabels = ["Dine-In", "Takeaway - Customer Pickup", "Takeaway - Delivery Service"];
+  const orderCounts = [
+    orderTypeData.dineIn.count,
+    orderTypeData.takeaway.count,
+    orderTypeData.delivery.count
+  ];
+  const orderTotals = [
+    orderTypeData.dineIn.total,
+    orderTypeData.takeaway.total,
+    orderTypeData.delivery.total
+  ];
+
+  const orderTypeChartData = {
+    labels: orderTypeLabels,
+    datasets: [
+      {
+        label: 'Number of Orders',
+        data: orderCounts,
+        backgroundColor: 'rgba(54, 162, 235, 0.7)', // Blue
+        yAxisID: 'y'
+      },
+      {
+        label: 'Total Income',
+        data: orderTotals,
+        backgroundColor: 'rgba(255, 99, 132, 0.7)', // Red
+        yAxisID: 'y1'
+      }
+    ]
+  };
+
+  const orderTypeChartOptions = {
+    responsive: true,
+    scales: {
+      y: {
+        type: 'linear',
+        display: true,
+        position: 'left',
+        title: {
+          display: true,
+          text: 'Order Count'
+        }
+      },
+      y1: {
+        type: 'linear',
+        display: true,
+        position: 'right',
+        title: {
+          display: true,
+          text: `Total Income (${symbol})`
+        },
+        grid: {
+          drawOnChartArea: false
+        }
+      }
+    },
+    plugins: {
+      legend: {
+        position: 'top'
+      }
+    }
+  };
+
   const formatCurrency = (value) => {
     const num = parseFloat(value);
     return isNaN(num) ? "0.00" : num.toFixed(2);
   };
-
-  const symbol = localStorage.getItem("currencySymbol") || "$";
 
   // ✅ Cost Breakdown Chart Data
   const costChartData = {
@@ -208,19 +374,75 @@ const AdminDashboard = () => {
     </div>
 
     {/* Summary Cards */}
-    <div className="row g-3 mb-4">
+    {/* <div className="row g-3 mb-5 row-cols-5"> */}
+    <div className="row g-3 mb-5">
       {[
-        { label: "Total Orders", value: summary.totalOrders, color: "primary", icon: "🛒" },
-        { label: "Orders Income / Orders Net Income", value: 
-          `${symbol}${formatCurrency(summary.totalOrdersIncome)} / ${symbol}${formatCurrency(summary.totalOrdersNetIncome)}`,
-          // (
-          //   <>
-          //     {symbol}{formatCurrency(summary.totalOrdersIncome)}
-          //     <br />
-          //     Net {symbol}{formatCurrency(summary.totalOrdersNetIncome)}
-          //   </>
-          // ), 
+        { label: 
+            // "Total Orders / Delivery Orders", 
+            (
+              <>
+                Total Orders 
+                <br />
+              </>
+            ), 
+          value: `${summary.totalOrders} `, color: "primary", icon: "🛒" },
+        { label: 
+            // "Orders Income ( Net Income )",
+             (
+              <>
+                Orders Income
+                <br />
+                ( Net Income )
+              </>
+            ), 
+          value: 
+            // `${symbol}${formatCurrency(summary.totalOrdersIncome)}   (${symbol}${formatCurrency(summary.totalOrdersNetIncome)})`,
+            (
+              <>
+                {symbol}{formatCurrency(summary.totalOrdersIncome)}
+                <br />
+                ( {symbol}{formatCurrency(summary.totalOrdersNetIncome)} )
+              </>
+            ), 
           color: "primary", icon: "🛒" },
+        { label:
+            // "Total Delevery Charges",
+            (
+              <>
+                Delivery Orders
+                <br />
+                ( Total Delevery Charges )
+                
+              </>
+            ), 
+          value: 
+            // `${symbol}${formatCurrency(summary.totaldeliveryOrdersIncome)}`, 
+            (
+              <>
+                {summary.totaldeliveryOrders} 
+                <br />
+                ( {symbol}{formatCurrency(summary.totaldeliveryOrdersIncome)} )
+              </>
+            ),
+          color: "primary", icon: "🚚" },
+        {
+          label: (
+            <>
+              Total Dine-In Orders
+              <br />
+              ( Total Service Charge )
+            </>
+          ),
+          value: (
+            <>
+              {summary.totalTableOrders}
+              <br />
+              ( {symbol}{formatCurrency(summary.totalServiceChargeIncome)} )
+            </>
+          ),
+          color: "primary",
+          icon: "%"
+        },
         { label: "Other Income", value: `${symbol}${formatCurrency(summary.totalOtherIncome)}`, color: "success", icon: "🎁"}, // ✅ NEW
         { label: "Other Expenses", value: `${symbol}${formatCurrency(summary.totalOtherExpenses)}`, color: "danger", icon: "🔧"}, // ✅ NEW
         
@@ -243,6 +465,17 @@ const AdminDashboard = () => {
           </div>
         </div>
       ))}
+    </div>
+
+    <div className="row g-4 mb-4">
+      <div className="col-12">
+        <div className="card shadow-sm h-100">
+          <div className="card-body">
+            <h6 className="fw-bold text-center mb-3">📊 Orders by Type & Delivery Place</h6>
+            <Bar data={orderTypeChartData} options={orderTypeChartOptions} />
+          </div>
+        </div>
+      </div>
     </div>
 
     {/* Chart Section */}
@@ -315,6 +548,14 @@ const AdminDashboard = () => {
                     <td>{count}</td>
                   </tr>
                 ))}
+                  <tr>
+                    <td>Delayed Completed</td>
+                    <td>{summary.delayedOrders}</td>
+                  </tr>
+                  <tr>
+                    <td>Delayed Completed (Day After)</td>
+                    <td>{summary.nextDayStatusUpdates}</td>
+                  </tr>
               </tbody>
             </table>
           </div>
@@ -346,6 +587,67 @@ const AdminDashboard = () => {
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Waiter Service Charge Earnings */}
+    <div className="row g-4 mt-2">
+      <div className="col-md-12">
+        <div className="card shadow-sm">
+          <div className="card-body">
+            <h6 className="fw-bold mb-3">🧑‍🍳 Waiters – Total Service Charge Earned</h6>
+            {summary.waiterServiceEarnings?.length > 0 ? (
+              <ul className="list-group">
+                {summary.waiterServiceEarnings.slice(0, 10).map((entry, idx) => (
+                  <li
+                    key={idx}
+                    className="list-group-item d-flex justify-content-between align-items-center"
+                  >
+                    <span>{entry.waiterName || "Unknown Waiter"}</span>
+                    <span className="badge bg-success">
+                      {symbol}{formatCurrency(entry.totalServiceCharge)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-muted">No waiter service charge data available</p>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Delivery Places Breakdown */}
+    <div className="row g-4 mt-2">
+      <div className="col-md-12">
+        <div className="card shadow-sm">
+          <div className="card-body">
+            <h6 className="fw-bold mb-3">📍 Delivery Places – Order Count & Revenue</h6>
+            {summary.deliveryPlacesBreakdown?.length > 0 ? (
+              <table className="table table-sm table-hover table-striped">
+                <thead>
+                  <tr>
+                    <th>Place</th>
+                    <th>Orders</th>
+                    <th>Revenue ({symbol})</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {summary.deliveryPlacesBreakdown.map((place, idx) => (
+                    <tr key={idx}>
+                      <td>{place.placeName}</td>
+                      <td>{place.count}</td>
+                      <td>{formatCurrency(place.totalCharge)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <p className="text-muted">No delivery place data available</p>
+            )}
           </div>
         </div>
       </div>

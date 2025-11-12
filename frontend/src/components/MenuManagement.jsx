@@ -2,16 +2,19 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import CreatableSelect from 'react-select/creatable';
+import makeAnimated from 'react-select/animated';
 
 const MenuManagement = () => {
   const [menus, setMenus] = useState([]);
   const [newMenu, setNewMenu] = useState({
     name: "",
     description: "",
-    price: "",
-    cost: "",
+    price: "0",
+    cost: "0",
     category: "Main Course",
-    minimumQty: 5
+    minimumQty: 5,
+    imageUrl: "" // <-- new field
   });
   const [editingMenu, setEditingMenu] = useState(null);
   const [editData, setEditData] = useState({ ...newMenu });
@@ -23,6 +26,12 @@ const MenuManagement = () => {
   const [restockMenu, setRestockMenu] = useState(null);
   const [restockAmount, setRestockAmount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [categoryOptions, setCategoryOptions] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [bulkRestockOpen, setBulkRestockOpen] = useState(false);
+  const [bulkRestockAmount, setBulkRestockAmount] = useState(0);
 
   const symbol = localStorage.getItem("currencySymbol") || "$";
 
@@ -37,11 +46,35 @@ const MenuManagement = () => {
       const res = await axios.get("https://goldenpluscaferms.onrender.com/api/auth/menus", {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setMenus(res.data);
+      
+      const menuData = res.data;
+      setMenus(menuData);
+
+      // Format unique categories as react-select options
+      const uniqueCats = [...new Set(menuData.map(menu => menu.category).filter(Boolean))];
+      const options = uniqueCats.map(cat => ({ value: cat, label: cat }));
+      
+      // Ensure at least one default option
+      if (options.length === 0) {
+        setCategoryOptions([{ value: "Main Course", label: "Main Course" }]);
+      } else {
+        setCategoryOptions(options);
+      }
+      
     } catch (err) {
       console.error("Failed to load menus:", err.message);
     }
   };
+
+  // Filter menus by search term and selected category
+  const filteredMenus = menus.filter((menu) => {
+    const matchesSearch = menu.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = !selectedCategory || menu.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  // Get flat list of categories for filtering (not for react-select)
+  const allCategories = [...new Set(menus.map(menu => menu.category).filter(Boolean))];
 
   // Calculate net profit
   const calculateNetProfit = (price, cost) => {
@@ -51,6 +84,7 @@ const MenuManagement = () => {
   // Handle create input change
   const handleChange = (e) => {
     const { name, value } = e.target;
+    
     setNewMenu((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -66,6 +100,7 @@ const MenuManagement = () => {
     if (file) {
       setImage(file);
       setPreview(URL.createObjectURL(file));
+      setNewMenu(prev => ({ ...prev, imageUrl: "" }));
     }
   };
 
@@ -75,6 +110,7 @@ const MenuManagement = () => {
     if (file) {
       setEditImage(file);
       setEditPreview(URL.createObjectURL(file));
+      setEditData(prev => ({ ...prev, imageUrl: "" }));
     }
   };
 
@@ -129,11 +165,12 @@ const MenuManagement = () => {
     setNewMenu({
       name: "",
       description: "",
-      price: "",
-      cost: "",
+      price: "0",
+      cost: "0",
       category: "Main Course",
       minimumQty: 5,
-      menuImage: ""
+      menuImage: "",
+      imageUrl: ""
     });
     setImage(null);
     setPreview("");
@@ -149,10 +186,11 @@ const MenuManagement = () => {
       cost: menu.cost,
       category: menu.category,
       minimumQty: menu.minimumQty,
-      currentQty: menu.currentQty
+      currentQty: menu.currentQty,
+      imageUrl: menu.imageUrl || "" // ✅ include imageUrl
     });
     setEditImage(null);
-    setEditPreview("");
+    setEditPreview(menu.imageUrl?.startsWith("http") ? "" : "");
   };
 
   // Submit edit
@@ -258,6 +296,32 @@ const MenuManagement = () => {
     }
   };
 
+  const handleBulkRestock = async () => {
+    if (bulkRestockAmount <= 0) {
+      toast.warn("Please enter a valid amount");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.post(
+        "https://goldenpluscaferms.onrender.com/api/auth/menu/restock-all",
+        { amount: bulkRestockAmount },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+
+      setMenus(res.data); // Update all menus at once
+      setBulkRestockOpen(false);
+      setBulkRestockAmount(0);
+      toast.success(`All items restocked by ${bulkRestockAmount} units!`);
+    } catch (err) {
+      console.error("Bulk restock failed:", err.response?.data || err.message);
+      toast.error(err.response?.data?.error || "Failed to restock all items");
+    }
+  };
+
   // Helper functions
   const calculateMenuStatus = (qty) => {
     if (!qty || qty <= 0) return "Out of Stock";
@@ -278,6 +342,15 @@ const MenuManagement = () => {
     }
   };
 
+  const convertGoogleDriveUrl = (url) => {
+    const regex = /\/file\/d\/([^\/]+)/;
+    const match = url.match(regex);
+    if (match) {
+      return `https://drive.google.com/uc?export=view&id=${match[1]}`;
+    }
+    return url; // return original if not a Drive link
+  };
+
   return (
     <div className="container my-4">
       <h2 className="mb-2 fw-bold text-primary"> Menu Management</h2>
@@ -286,6 +359,33 @@ const MenuManagement = () => {
       {/* Create Form */}
       <form onSubmit={handleCreate} className="mb-4 p-3 border rounded bg-light">
         <div className="row g-3">
+          <div className="col-md-6">
+            <label className="form-label">Category</label>
+            <CreatableSelect
+              value={categoryOptions.find(option => option.value === newMenu.category) || null}
+              onChange={(selectedOption) => {
+                const value = selectedOption ? selectedOption.value : "Main Course";
+                setNewMenu(prev => ({ ...prev, category: value }));
+                
+                // Auto-add new category to options if it's not there
+                if (selectedOption && !categoryOptions.some(opt => opt.value === value)) {
+                  setCategoryOptions(prev => [...prev, { value, label: value }]);
+                }
+              }}
+              onCreateOption={(inputValue) => {
+                const newOption = { value: inputValue, label: inputValue };
+                setCategoryOptions(prev => [...prev, newOption]);
+                setNewMenu(prev => ({ ...prev, category: inputValue }));
+              }}
+              options={categoryOptions}
+              placeholder="Select or create category..."
+              className="basic-single"
+              classNamePrefix="select"
+              isClearable={false}
+              components={makeAnimated()}
+            />
+          </div>
+
           <div className="col-md-6">
             <label className="form-label">Menu Name *</label>
             <input
@@ -299,27 +399,15 @@ const MenuManagement = () => {
             />
           </div>
 
-          <div className="col-md-6">
-            <label className="form-label">Category</label>
-            <select
-              name="category"
-              value={newMenu.category}
-              onChange={handleChange}
-              className="form-select"
-            >
-              <option value="Main Course">Main Course</option>
-              <option value="Appetizer">Appetizer</option>
-              <option value="Dessert">Dessert</option>
-              <option value="Drink">Drink</option>
-            </select>
-          </div>
-
           <div className="col-md-4">
             <label className="form-label">Price *</label>
             <input
               type="number"
               name="price"
               step="0.01"
+              min="0"
+              onFocus={(e) => e.target.select()}
+              onWheel={(e) => e.target.blur()}
               value={newMenu.price}
               onChange={handleChange}
               className="form-control"
@@ -334,10 +422,14 @@ const MenuManagement = () => {
               type="number"
               name="cost"
               step="0.01"
+              min="0"
+              onFocus={(e) => e.target.select()}
+              onWheel={(e) => e.target.blur()}
               value={newMenu.cost}
               onChange={handleChange}
               className="form-control"
               placeholder="Enter cost"
+              required
             />
           </div>
 
@@ -347,6 +439,8 @@ const MenuManagement = () => {
               type="number"
               name="minimumQty"
               min="1"
+              onFocus={(e) => e.target.select()}
+              onWheel={(e) => e.target.blur()}
               value={newMenu.minimumQty}
               onChange={handleChange}
               className="form-control"
@@ -367,6 +461,17 @@ const MenuManagement = () => {
           </div>
 
           <div className="col-12">
+            <label className="form-label">Paste an image URL</label>
+            <input
+              type="url"
+              className="form-control"
+              placeholder="https://example.com/image.jpg"
+              value={newMenu.imageUrl}
+              onChange={(e) => setNewMenu(prev => ({ ...prev, imageUrl: e.target.value }))}
+            />
+          </div>
+
+          {/* <div className="col-12">
             <label className="form-label">Image Upload *</label>
             <input
               type="file"
@@ -374,8 +479,9 @@ const MenuManagement = () => {
               accept="image/*"
               onChange={handleImageChange}
               className="form-control"
+              disabled={!!(newMenu.imageUrl?.trim())} // ✅ safe check
             />
-          </div>
+          </div> */}
 
           {preview && (
             <div className="col-12 mt-2">
@@ -435,6 +541,9 @@ const MenuManagement = () => {
                         type="number"
                         name="price"
                         step="0.01"
+                        min="0"
+                        onFocus={(e) => e.target.select()}
+                        onWheel={(e) => e.target.blur()}
                         value={editData.price}
                         onChange={handleEditChange}
                         className="form-control"
@@ -448,9 +557,13 @@ const MenuManagement = () => {
                         type="number"
                         name="cost"
                         step="0.01"
+                        min="0"
+                        onFocus={(e) => e.target.select()}
+                        onWheel={(e) => e.target.blur()}
                         value={editData.cost}
                         onChange={handleEditChange}
                         className="form-control"
+                        required
                       />
                     </div>
 
@@ -460,6 +573,8 @@ const MenuManagement = () => {
                         type="number"
                         name="minimumQty"
                         min="1"
+                        onFocus={(e) => e.target.select()}
+                        onWheel={(e) => e.target.blur()}
                         value={editData.minimumQty}
                         onChange={handleEditChange}
                         className="form-control"
@@ -472,6 +587,8 @@ const MenuManagement = () => {
                       <input
                         type="number"
                         name="currentQty"
+                        onFocus={(e) => e.target.select()}
+                        onWheel={(e) => e.target.blur()}
                         value={editData.currentQty = editData.minimumQty}
                         readOnly
                         className="form-control"
@@ -493,7 +610,23 @@ const MenuManagement = () => {
                       </select>
                     </div>
 
+                    {/* Edit: Image URL */}
                     <div className="col-12">
+                      <label>Paste image URL</label>
+                      <input
+                        type="url"
+                        className="form-control"
+                        placeholder="https://example.com/image.jpg"
+                        value={editData.imageUrl || ""}
+                        onChange={(e) => {
+                          setEditData(prev => ({ ...prev, imageUrl: e.target.value }));
+                          setEditImage(null);
+                          setEditPreview("");
+                        }}
+                      />
+                    </div>
+                    
+                    {/* <div className="col-12">
                       <label className="form-label">Image Upload</label>
                       <input
                         type="file"
@@ -501,8 +634,9 @@ const MenuManagement = () => {
                         accept="image/*"
                         onChange={handleEditImageChange}
                         className="form-control"
+                        disabled={!!(editData.imageUrl?.trim())}
                       />
-                    </div>
+                    </div> */}
 
                     {editPreview && (
                       <div className="col-12 mt-2">
@@ -541,6 +675,8 @@ const MenuManagement = () => {
                 <input
                   type="number"
                   value={restockAmount}
+                  onFocus={(e) => e.target.select()}
+                  onWheel={(e) => e.target.blur()}
                   onChange={(e) => setRestockAmount(parseInt(e.target.value))}
                   className="form-control"
                   min="1"
@@ -557,25 +693,111 @@ const MenuManagement = () => {
         </div>
       )}
 
+      {/* Bulk Restock Modal */}
+      {bulkRestockOpen && (
+        <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Restock All Menu Items</h5>
+                <button className="btn-close" onClick={() => setBulkRestockOpen(false)}></button>
+              </div>
+              <div className="modal-body">
+                <p>Enter the quantity to add to <strong>all</strong> menu items:</p>
+                <input
+                  type="number"
+                  className="form-control"
+                  onFocus={(e) => e.target.select()}
+                  onWheel={(e) => e.target.blur()}
+                  value={bulkRestockAmount}
+                  onChange={(e) => setBulkRestockAmount(parseInt(e.target.value) || 0)}
+                  min="1"
+                  placeholder="e.g., 10"
+                  autoFocus
+                />
+              </div>
+              <div className="modal-footer">
+                <button className="btn btn-secondary" onClick={() => setBulkRestockOpen(false)}>
+                  Cancel
+                </button>
+                <button
+                  className="btn btn-success"
+                  onClick={handleBulkRestock}
+                  disabled={bulkRestockAmount <= 0}
+                >
+                  Apply to All Items
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Restock Button */}
+      <div className="d-flex justify-content-end mb-3">
+        <button
+          className="btn btn-outline-success"
+          onClick={() => setBulkRestockOpen(true)}
+        >
+          📦 Restock All Menu Items
+        </button>
+      </div>
+
+      {/* Search & Filter Controls */}
+      <div className="mb-4 p-3 bg-white rounded shadow-sm">
+        <div className="row g-3">
+          <div className="col-md-4">
+            <label className="form-label">Filter by Category</label>
+            <select
+              className="form-select"
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+            >
+              <option value="">All Categories</option>
+              {allCategories.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="col-md-8">
+            <label className="form-label">Search Menu</label>
+            <input
+              type="text"
+              className="form-control"
+              placeholder="Search by name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </div>
+      </div>
+
       {/* Menu List */}
       <div className="row g-3">
-        {menus.map((menu) => {
+        {filteredMenus.map((menu) => {
           const status = calculateMenuStatus(menu.currentQty);
           return (
             <div key={menu._id} className="col-md-3 mb-3">
               <div className="card shadow-sm h-100 position-relative">
                 <img
+                  // src={
+                  //   menu.imageUrl.startsWith("https")
+                  //     ? menu.imageUrl
+                  //     : `https://goldenpluscaferms.onrender.com${menu.imageUrl}`
+                  // }
                   src={
                     menu.imageUrl.startsWith("https")
-                      ? menu.imageUrl
-                      : `https://goldenpluscaferms.onrender.com${menu.imageUrl}`
+                      ? convertGoogleDriveUrl(menu.imageUrl)
+                      : `${menu.imageUrl}`
                   }
                   alt={menu.name}
                   className="card-img-top"
-                  style={{ height: "280px", objectFit: "cover" }}
+                  style={{ height: "100px", objectFit: "contain" }}
                 />
                 <div className="card-body d-flex flex-column">
-                  <h5>{menu.name}</h5>
+                  <><h5>{menu.name}</h5><h6>({menu.category})</h6></>
                   <p className="card-text">
                     Price: {symbol}
                     {menu.price.toFixed(2)}
