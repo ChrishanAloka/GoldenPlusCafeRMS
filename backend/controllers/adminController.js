@@ -35,6 +35,8 @@ exports.getAdminSummary = async (req, res) => {
     const totalSalaries = salaries.reduce((sum, s) => sum + s.total, 0);
     const totalOtherExpenses = otherExpenses.reduce((sum, e) => sum + e.amount, 0);
     const totalOrdersIncome = orders.reduce((sum, o) => sum + o.totalPrice, 0);
+    const totaldeliveryOrdersIncome = orders.reduce((sum, o) => sum + o.deliveryCharge, 0);
+    
     // ✅ Calculate totalOrdersNetIncome: sum of (item.netProfit * item.quantity) for all items in all orders
     const totalOrdersNetIncome = orders.reduce((sum, order) => {
       const orderNetProfit = order.items.reduce((itemSum, item) => {
@@ -56,7 +58,11 @@ exports.getAdminSummary = async (req, res) => {
     const netProfit = totalIncome - totalCost;
 
     // ✅ Count orders
-    const totalOrders = orders.length;
+    const totaldeliveryOrders = orders.filter((item) => item.deliveryType === "Delivery Service").length;
+
+    const totalOrders= orders.length;
+
+    const totalServiceChargeIncome = orders.reduce((sum, order) => sum + (order.serviceCharge || 0), 0);
 
     // ✅ Count by status
     const statusCounts = orders.reduce((acc, order) => {
@@ -64,6 +70,32 @@ exports.getAdminSummary = async (req, res) => {
       return acc;
     }, {});
 
+    const delayedOrders = orders.filter(order => {
+      // Skip if statusUpdatedAt is not set (shouldn't happen if you always set it)
+      if (!order.statusUpdatedAt) return false;
+
+      const diffMs = new Date(order.statusUpdatedAt) - new Date(order.createdAt);
+      const diffMinutes = diffMs / (1000 * 60);
+      console.log("Diff Minute", diffMinutes);
+      return diffMinutes > 30;
+      
+    }).length;
+
+    const nextDayStatusUpdates = orders.filter(order => {
+
+      const created = new Date(order.createdAt);
+      const updated = (!Date(order.statusUpdatedAt)) && order.status !== "Pending" ? new Date(order.statusUpdatedAt) : new Date(order.createdAt);
+        
+      console.log("order.statusupdates", order.invoiceNo,new Date(order.statusUpdatedAt));
+      console.log("Created date and updated", created.getDate(), updated.getDate());
+      // Compare YEAR, MONTH, and DAY (ignore time)
+      return (
+        created.getFullYear() !== updated.getFullYear() ||
+        created.getMonth() !== updated.getMonth() ||
+        created.getDate() !== updated.getDate()
+      );
+    }).length;
+    
     // ✅ Payment breakdown
     const paymentBreakdown = orders.reduce(
       (acc, order) => {
@@ -89,6 +121,105 @@ exports.getAdminSummary = async (req, res) => {
       .sort((a, b) => b.count - a.count)
       .slice(0, 10); // Top 10
 
+    // ✅ Waiter Service Charge Earnings (only for dine-in orders with waiterName)
+    const waiterEarnings = {};
+    orders.forEach(order => {
+      // Only include orders with a waiter and service charge > 0
+      if (order.waiterName && order.serviceCharge > 0) {
+        waiterEarnings[order.waiterName] = (waiterEarnings[order.waiterName] || 0) + order.serviceCharge;
+      }
+    });
+
+    const waiterServiceEarnings = Object.entries(waiterEarnings)
+      .map(([waiterName, totalServiceCharge]) => ({ waiterName, totalServiceCharge }))
+      .sort((a, b) => b.totalServiceCharge - a.totalServiceCharge);
+
+    // ✅ 1. Total Dine-In (Table) Orders
+    const totalTableOrders = orders.filter(order => 
+      order.tableNo && order.tableNo !== "Takeaway"
+    ).length;
+
+    // ✅ 2. Delivery Places Stats
+    const deliveryPlaceStats = {};
+    orders.forEach(order => {
+      if (
+        order.deliveryType === "Delivery Service" &&
+        order.deliveryPlaceName &&
+        order.deliveryCharge > 0
+      ) {
+        const name = order.deliveryPlaceName;
+        if (!deliveryPlaceStats[name]) {
+          deliveryPlaceStats[name] = { count: 0, totalCharge: 0 };
+        }
+        deliveryPlaceStats[name].count += 1;
+        deliveryPlaceStats[name].totalCharge += order.deliveryCharge;
+      }
+    });
+
+    const deliveryPlacesBreakdown = Object.entries(deliveryPlaceStats)
+      .map(([placeName, { count, totalCharge }]) => ({
+        placeName,
+        count,
+        totalCharge
+      }))
+      .sort((a, b) => b.count - a.count); // or sort by totalCharge if preferred
+
+    const orderTypeBreakdown = {
+      "Dine-In": { count: 0, total: 0 },
+      "Takeaway": { count: 0, total: 0 },
+      "Delivery": { count: 0, total: 0, byPlace: {} }
+    };
+
+    orders.forEach(order => {
+      const totalPrice = order.totalPrice || 0;
+
+      if (order.deliveryType === "Delivery Service") {
+        orderTypeBreakdown["Delivery"].count += 1;
+        orderTypeBreakdown["Delivery"].total += totalPrice;
+
+        const place = order.deliveryPlaceName || "Unknown";
+        if (!orderTypeBreakdown["Delivery"].byPlace[place]) {
+          orderTypeBreakdown["Delivery"].byPlace[place] = { count: 0, total: 0 };
+        }
+        orderTypeBreakdown["Delivery"].byPlace[place].count += 1;
+        orderTypeBreakdown["Delivery"].byPlace[place].total += totalPrice;
+      } else if (order.tableNo === "Takeaway") {
+        orderTypeBreakdown["Takeaway"].count += 1;
+        orderTypeBreakdown["Takeaway"].total += totalPrice;
+      } else {
+        // Assume Dine-In
+        orderTypeBreakdown["Dine-In"].count += 1;
+        orderTypeBreakdown["Dine-In"].total += totalPrice;
+      }
+    });
+
+    // Order types summary
+    let dineInCount = 0, dineInTotal = 0;
+    let takeawayCount = 0, takeawayTotal = 0;
+    let deliveryCount = 0, deliveryTotal = 0;
+
+    orders.forEach(order => {
+      const total = order.totalPrice || 0;
+
+      if (order.deliveryType === "Delivery Service") {
+        deliveryCount += 1;
+        deliveryTotal += total;
+      } else if (order.tableNo === "Takeaway") {
+        takeawayCount += 1;
+        takeawayTotal += total;
+      } else {
+        // Assume Dine-In (has tableNo and not Takeaway)
+        dineInCount += 1;
+        dineInTotal += total;
+      }
+    });
+
+    const orderTypeSummary = {
+      dineIn: { count: dineInCount, total: dineInTotal },
+      takeaway: { count: takeawayCount, total: takeawayTotal },
+      delivery: { count: deliveryCount, total: deliveryTotal }
+    };
+
     res.json({
       totalIncome,
       totalOtherIncome,
@@ -99,11 +230,21 @@ exports.getAdminSummary = async (req, res) => {
       totalCost,
       netProfit,
       totalOrders,
+      totaldeliveryOrders,
+      totaldeliveryOrdersIncome,
       totalOrdersIncome,
       totalOrdersNetIncome,
+      totalServiceChargeIncome,
+      totalTableOrders,              // 👈 NEW
+      deliveryPlacesBreakdown, 
       statusCounts,
+      delayedOrders,           // ✅ new
+      nextDayStatusUpdates,    // ✅ new
       paymentBreakdown,
-      topMenus
+      topMenus,
+      waiterServiceEarnings,
+      orderTypeBreakdown,
+      orderTypeSummary
     });
   } catch (err) {
     console.error("Failed to fetch admin summary:", err.message);

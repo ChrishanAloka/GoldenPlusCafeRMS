@@ -10,13 +10,13 @@ const storage = multer.memoryStorage(); // For buffer upload
 const upload = multer({ storage });
 
 const menuController = require("../controllers/menuController");
-const { getMenus, deleteMenu } = require("../controllers/menuController");
+const { getMenus, deleteMenu, restockAllMenus } = require("../controllers/menuController");
 
 const authMiddleware = require("../middleware/authMiddleware");
 // const upload = require("../middleware/uploadMiddleware");
 // ✅ Add this line:
 const orderController = require("../controllers/orderController");
-const {getCustomerByPhone, updateOrderStatus} = require("../controllers/orderController");
+const {getCustomerByPhone, updateOrderStatus, searchCustomers} = require("../controllers/orderController");
 const { getMonthlyReport } = require("../controllers/reportController");
 
 const { getBills, addBill, updateBill, deleteBill } = require("../controllers/kitchenBillController");
@@ -45,12 +45,24 @@ const serviceChargeController = require("../controllers/serviceChargeController"
 
 const deliveryChargeController = require("../controllers/deliveryChargeController");
 
+const {
+  getDeliveryCharges,
+  upsertDeliveryCharge,
+  deleteDeliveryCharge
+} = require("../controllers/deliveryChargeByPlaceController");
+
 const driverController = require("../controllers/driverController");
 
 const {submitShiftSummary,  getShiftSummaries,  getShiftSummaryByDate} = require("../controllers/cashierShiftSummaryController");
 
 const {  getIncomes,  addIncome,  updateIncome,  deleteIncome, getIncomesByDate} = require("../controllers/otherIncomeController");
 const {  getExpenses,  addExpense,  updateExpense,  deleteExpense, getExpensesByDate} = require("../controllers/otherExpenseController");
+const { getPrinters, upsertPrinter, deletePrinter } = require("../controllers/printerController");
+
+// Only admin can manage printers (adjust roles as needed)
+router.get("/printers", authMiddleware(["admin", "kitchen", "cashier"]), getPrinters);
+router.post("/printers", authMiddleware(["admin", "kitchen", "cashier"]), upsertPrinter);
+router.delete("/printers/:id", authMiddleware(["admin", "kitchen", "cashier"]), deletePrinter);
 
 // Public routes
 router.post("/signup", signup);
@@ -75,6 +87,7 @@ router.get("/menus", authMiddleware(["admin", "kitchen", "cashier"]), getMenus);
 router.post("/menu", authMiddleware(["admin", "kitchen", "cashier"]), upload.single("image"), menuController.createMenu);
 router.put("/menu/:id", authMiddleware(["admin", "kitchen", "cashier"]), upload.single("image"), menuController.updateMenu);
 router.delete("/menu/:id", authMiddleware(["admin", "kitchen", "cashier"]), deleteMenu);
+router.post('/menu/restock-all', authMiddleware(["admin", "kitchen", "cashier"]), restockAllMenus);
 
 // ✅ New Order Routes
 router.post("/order", authMiddleware(["admin","cashier"]), orderController.createOrder); // Now defined
@@ -82,8 +95,11 @@ router.get("/order/:id", authMiddleware(["admin", "cashier"]), orderController.g
 router.get("/orders", authMiddleware(["admin","cashier", "kitchen"]), orderController.getOrderHistory);
 router.put("/order/:id/status", authMiddleware(["kitchen", "admin", "cashier"]), orderController.updateOrderStatus);
 router.get("/orders/export/excel", authMiddleware(["admin", "cashier", "kitchen"]), orderController.exportOrdersToExcel);
+router.get('/customers-list', authMiddleware(["admin", "cashier", "kitchen"]), orderController.getAllCustomers);
+router.delete("/order/:id", authMiddleware(["admin", "cashier", "kitchen"]), orderController.deleteOrder);
 
 router.get("/customer", authMiddleware(["admin", "cashier"]), getCustomerByPhone);
+router.get('/customers-search', authMiddleware(["admin", "cashier"]), searchCustomers);
 
 router.put("/order/:id/status", authMiddleware(["admin", "kitchen", "cashier"]), updateOrderStatus);
 
@@ -94,6 +110,10 @@ router.put("/admin/service-charge", authMiddleware(["admin"]), serviceChargeCont
 //Delivery Charge
 router.get("/admin/delivery-charge", authMiddleware(["admin", "cashier"]), deliveryChargeController.getDeliveryCharge);
 router.put("/admin/delivery-charge", authMiddleware(["admin"]), deliveryChargeController.updateDeliveryCharge);
+
+router.get("/delivery-charges", authMiddleware(["admin", "cashier"]), getDeliveryCharges);
+router.post("/delivery-charges", authMiddleware(["admin"]), upsertDeliveryCharge);
+router.delete("/delivery-charges/:id", authMiddleware(["admin"]), deleteDeliveryCharge);
 
 //Takeaway Orders
 router.get("/cashier/takeaway-orders", authMiddleware(["admin", "cashier"]), orderController.getCashierTakeawayOrders);

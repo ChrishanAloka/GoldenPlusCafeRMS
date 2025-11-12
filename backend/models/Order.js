@@ -44,6 +44,11 @@ const orderSchema = new mongoose.Schema({
     enum: ["Customer Pickup", "Delivery Service"],
     default: "Customer Pickup"
   },
+  // In your Order model (orderSchema)
+  deliveryPlaceName: {
+    type: String,
+    default: null
+  },
   deliveryCharge: { // ✅ New field
     type: Number,
     default: 0
@@ -89,14 +94,27 @@ const orderSchema = new mongoose.Schema({
     ref: "User",
     required: true
   },
+  waiterId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Employee", // or whatever your employee/user model is named
+    default: null
+  },
+  waiterName: {
+    type: String,
+    default: null
+  },
   status: {
     type: String,
     default: "Pending"
+  },
+  statusUpdatedAt: {
+    type: Date,
+    default: Date.now // initially set to order creation time
   },
   createdAt: {
     type: Date,
     default: Date.now
   }
-});
+},{ timestamps: true });
 
 module.exports = mongoose.model("Order", orderSchema);

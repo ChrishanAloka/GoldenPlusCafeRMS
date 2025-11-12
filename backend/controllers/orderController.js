@@ -3,10 +3,11 @@
 const mongoose = require("mongoose");
 const Order = require("../models/Order");
 const Driver = require("../models/Driver");
-
+const Employee = require("../models/Employee");
 const Menu = require("../models/Menu");
-const DeliveryCharge = require("../models/DeliveryCharge");
+const DeliveryCharge = require("../models/DeliveryChargeByPlace");
 const ServiceCharge = require("../models/ServiceCharge");
+const Customer = require('../models/Customer'); // adjust path as needed
 
 
 // POST /api/auth/order
@@ -17,21 +18,66 @@ exports.createOrder = async (req, res) => {
     tableNo,
     items,
     deliveryType,
-    deliveryCharge,
+    deliveryPlaceId,
     deliveryNote,
-    payment // { cash, card, bankTransfer, notes }
+    payment, // { cash, card, bankTransfer, notes }
+    waiterId
   } = req.body;
+
+  // const randomPart = String(Math.floor(Math.random() * 1000000)).padStart(6, '0');
+  // const invoiceNo = `INV-${Date.now()}-${randomPart}`;
+  const invoiceNo = `INV-${String(Math.floor(Math.random() * 1000000)).padStart(6, '0')}`;
 
   if (!items || items.length === 0) {
     return res.status(400).json({ error: "No items provided" });
   }
 
   try {
+    let waiterName = null; // or "N/A", "", etc.
+    
     // Auto-fill customer name from last order
     let finalCustomerName = customerName;
     if (!finalCustomerName && customerPhone) {
       const lastOrder = await Order.findOne({ customerPhone }).sort({ createdAt: -1 });
       finalCustomerName = lastOrder?.customerName || customerName;
+    }
+
+    // Upsert customer in Customer collection
+    if (customerPhone) {
+      await Customer.findOneAndUpdate(
+        { phone: customerPhone },
+        { 
+          phone: customerPhone,
+          name: finalCustomerName || undefined, // only update name if provided
+          $setOnInsert: { createdAt: new Date() }
+        },
+        { 
+          upsert: true, 
+          new: true,
+          setDefaultsOnInsert: true 
+        }
+      );
+    }
+
+    // Validate waiterId if it's a Dine-In order
+    let validatedWaiterId = null;
+    if (tableNo && tableNo !== "Takeaway") {
+      if (!waiterId) {
+        return res.status(400).json({ error: "Waiter is required for Dine-In orders" });
+      }
+
+      const employee = await Employee.findById(waiterId); // 👈 assumes you have an Employee model
+      if (!employee) {
+        return res.status(400).json({ error: "Invalid waiter selected" });
+      }
+
+      // Adjust field name if your employee role is stored as 'position', 'jobTitle', etc.
+      if (employee.role?.toLowerCase() !== "waiter") {
+        return res.status(400).json({ error: "Selected employee is not a waiter" });
+      }
+
+      validatedWaiterId = waiterId;
+      waiterName = employee.name || employee.fullName || "Unknown Waiter"; // 👈 capture name
     }
 
     // Validate and enrich items
@@ -56,7 +102,7 @@ exports.createOrder = async (req, res) => {
 
       validItems.push({
         menuId: menuItem._id,
-        name: menuItem.name,
+        name: item.name,
         price: menuItem.price,
         netProfit: netProfitPerUnit,
         imageUrl: menuItem.imageUrl,
@@ -77,27 +123,43 @@ exports.createOrder = async (req, res) => {
     }
 
     // Apply delivery charge
+    // let deliveryCharge = 0;
+    // if (tableNo === "Takeaway" && deliveryType === "Delivery Service") {
+    //   const deliverySettings = await DeliveryCharge.findOne({});
+    //   if (deliverySettings?.isActive) {
+    //     deliveryCharge = deliverySettings.amount;
+    //     finalTotalPrice = subtotal + deliveryCharge;
+    //   }
+    // }
+
     let deliveryCharge = 0;
-    if (tableNo === "Takeaway" && deliveryType === "Delivery Service") {
-      const deliverySettings = await DeliveryCharge.findOne({});
-      if (deliverySettings?.isActive) {
-        deliveryCharge = deliverySettings.amount;
-        finalTotalPrice = subtotal + deliveryCharge;
+    let deliveryPlaceName = null;
+
+    if (tableNo === "Takeaway" && deliveryType === "Delivery Service" && deliveryPlaceId) {
+      const place = await DeliveryCharge.findById(deliveryPlaceId); // ✅ from your new model
+      if (!place) {
+        return res.status(400).json({ error: "Invalid delivery place selected" });
       }
+      deliveryCharge = place.charge;
+      deliveryPlaceName = place.placeName; // ✅ store name for receipt
+      finalTotalPrice += deliveryCharge;
     }
 
-    const invoiceNo = `INV-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    // const invoiceNo = `INV-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
     const newOrder = new Order({
       invoiceNo,
       customerName: finalCustomerName,
       customerPhone,
       tableNo,
+      waiterId: validatedWaiterId,
+      waiterName: waiterName,
       items: validItems,
       subtotal,
       serviceCharge,
       deliveryType,
-      deliveryCharge,
+      deliveryCharge,        // ✅ computed value
+      deliveryPlaceName, 
       deliveryNote: deliveryNote || "",
        deliveryStatus: deliveryType === "Customer Pickup"
         ? "Customer Pending"
@@ -127,6 +189,12 @@ exports.createOrder = async (req, res) => {
 
     res.json(newOrder);
   } catch (err) {
+    if (err.code === 11000 && err.keyPattern?.invoiceNo) {
+      // Likely a duplicate submission (e.g., double-click, retry)
+      return res.status(409).json({
+        error: "This order has already been processed. Please do not submit again."
+      });
+    }
     console.error("Order creation failed:", err.message);
     res.status(500).json({ error: "Internal server error" });
   }
@@ -134,7 +202,7 @@ exports.createOrder = async (req, res) => {
 
 // GET /api/auth/orders/history
 exports.getOrderHistory = async (req, res) => {
-  const { startDate, endDate, status } = req.query;
+  const { startDate, endDate, status, orderType, deliveryType } = req.query;
   const query = {};
 
   // ✅ Handle date range properly
@@ -162,6 +230,18 @@ exports.getOrderHistory = async (req, res) => {
     query.status = status;
   }
 
+  // Order Type: "table" = Dine-In, "takeaway" = Takeaway
+  if (orderType === "table") {
+    query.tableNo = { $ne: "Takeaway" }; // Dine-In has real table numbers
+  } else if (orderType === "takeaway") {
+    query.tableNo = "Takeaway";
+  }
+
+  // Delivery Type (only applies to Takeaway)
+  if (deliveryType) {
+    query.deliveryType = deliveryType;
+  }
+
   try {
     const orders = await Order.find(query).populate("cashierId", "name role").sort({ createdAt: -1 });
     res.json(orders);
@@ -179,10 +259,12 @@ exports.updateOrderStatus = async (req, res) => {
   try {
     const updated = await Order.findByIdAndUpdate(
       id,
-      { status },
+      { 
+        status,
+        statusUpdatedAt: Date.now()
+       },
       { new: true }
     );
-
     res.json(updated);
   } catch (err) {
     res.status(400).json({ error: "Failed to update status" });
@@ -237,21 +319,63 @@ exports.getCustomerByPhone = async (req, res) => {
   }
 };
 
-// backend/controllers/orderController.js
-
-exports.updateOrderStatus = async (req, res) => {
-  const { id } = req.params;
-  const { status } = req.body;
+// GET /api/auth/customers-search?q=...
+exports.searchCustomers = async (req, res) => {
+  const { q = '' } = req.query;
 
   try {
-    const updated = await Order.findByIdAndUpdate(
-      id,
-      { status },
-      { new: true }
-    );
-    res.json(updated);
+    // Get all orders, group by phone, and pick the latest name per phone
+    const pipeline = [
+      { $match: { customerPhone: { $exists: true, $ne: null } } },
+      { $sort: { date: -1 } },
+      {
+        $group: {
+          _id: '$customerPhone',
+          name: { $first: '$customerName' },
+          phone: { $first: '$customerPhone' }
+        }
+      },
+      {
+        $match: {
+          $or: [
+            { phone: { $regex: q, $options: 'i' } },
+            { name: { $regex: q, $options: 'i' } }
+          ]
+        }
+      },
+      { $limit: 20 }
+    ];
+
+    const customers = await Order.aggregate(pipeline);
+    res.json(customers);
   } catch (err) {
-    res.status(400).json({ error: "Failed to update status" });
+    console.error('Search customers error:', err);
+    res.status(500).json({ error: 'Failed to search customers' });
+  }
+};
+
+// GET /api/auth/customers-list
+exports.getAllCustomers = async (req, res) => {
+  try {
+    const pipeline = [
+      { $match: { customerPhone: { $exists: true, $ne: null } } },
+      { $sort: { date: -1 } },
+      {
+        $group: {
+          _id: '$customerPhone',
+          name: { $first: '$customerName' },
+          phone: { $first: '$customerPhone' },
+          lastOrderDate: { $first: '$date' }
+        }
+      },
+      { $sort: { lastOrderDate: -1 } }
+    ];
+
+    const customers = await Order.aggregate(pipeline);
+    res.json(customers);
+  } catch (err) {
+    console.error('Failed to fetch customers:', err);
+    res.status(500).json({ error: 'Failed to load customers' });
   }
 };
 
@@ -324,6 +448,42 @@ exports.updateDeliveryStatus = async (req, res) => {
     res.json(updatedOrder);
   } catch (err) {
     console.error("Failed to update delivery status:", err.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+// DELETE /api/auth/order/:id
+exports.deleteOrder = async (req, res) => {
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ error: "Invalid order ID" });
+  }
+
+  try {
+    const order = await Order.findById(id);
+    if (!order) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    // Optional: Only allow deletion if status is "Pending"
+    // if (order.status !== "Pending") {
+    //   return res.status(403).json({ error: "Only pending orders can be deleted" });
+    // }
+
+    // Restore stock
+    // for (const item of order.items) {
+    //   await Menu.findByIdAndUpdate(item.menuId, {
+    //     $inc: { currentQty: item.quantity }
+    //   });
+    // }
+
+    // Delete the order
+    await Order.findByIdAndDelete(id);
+
+    res.json({ message: "Order deleted successfully" });
+  } catch (err) {
+    console.error("Failed to delete order:", err.message);
     res.status(500).json({ error: "Internal server error" });
   }
 };
