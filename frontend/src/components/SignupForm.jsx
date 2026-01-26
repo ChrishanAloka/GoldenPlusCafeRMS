@@ -15,7 +15,7 @@ const SignupForm = ({ role, title }) => {
     setLoading(true); // 👈 Start loading
 
     try {
-      await axios.post("https://goldenpluscaferms.onrender.com/api/auth/signup", {
+      await axios.post("https://goldenpluscafeandrestaurantapp.onrender.com/api/auth/signup", {
         name,
         email,
         password,
